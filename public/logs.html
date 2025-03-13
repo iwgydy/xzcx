@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึก</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: url('https://i.pinimg.com/1200x/80/7b/0d/807b0d00ea3aab1bdf89012248e9d97a.jpg') no-repeat center center fixed; 
+      background-size: cover; 
+      color: #FFFFFF; 
+      line-height: 1.6; 
+      padding: 20px; 
+    }
+    .header { 
+      display: flex; 
+      justify-content: flex-end; 
+      align-items: center; 
+      margin-bottom: 20px; 
+    }
+    .menu-btn { 
+      background: rgba(30, 58, 138, 0.9); 
+      border: none; 
+      padding: 10px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      backdrop-filter: blur(5px); 
+    }
+    .menu-btn i { color: #FFFFFF; font-size: 1.5em; }
+    .nav-menu { 
+      display: none; 
+      position: absolute; 
+      top: 60px; 
+      right: 20px; 
+      background: rgba(30, 58, 138, 0.9); 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      backdrop-filter: blur(5px); 
+      flex-direction: column; 
+      width: 200px; 
+      padding: 10px; 
+    }
+    .nav-menu.active { display: flex; }
+    .nav-menu a { 
+      color: #FFFFFF; 
+      text-decoration: none; 
+      font-weight: 600; 
+      padding: 10px; 
+      border-radius: 6px; 
+      transition: background 0.3s; 
+      display: flex; 
+      align-items: center; 
+    }
+    .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
+    h1, h2 { font-weight: 700; margin-bottom: 20px; text-align: center; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.4em; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .stats { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 15px; 
+      margin-bottom: 20px; 
+    }
+    .stat-card { 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 15px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      text-align: center; 
+    }
+    .stat-card h3 { font-size: 1.1em; color: #3B82F6; margin-bottom: 5px; }
+    .stat-card p { font-size: 1.2em; font-weight: 600; color: #1E3A8A; }
+    .logs { 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 15px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      max-height: 400px; 
+      overflow-y: auto; 
+    }
+    .log-entry { padding: 8px 0; border-bottom: 1px solid #E5E7EB; color: #1E3A8A; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.8); }
+    ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 4px; }
+    i { margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+    <div class="nav-menu" id="navMenu">
+      <a href="/"><i class="fas fa-home"></i> หน้าหลัก</a>
+      <a href="/phones"><i class="fas fa-phone"></i> รายชื่อเบอร์</a>
+      <a href="/details"><i class="fas fa-wallet"></i> รายละเอียดเงิน</a>
+      <a href="/logs"><i class="fas fa-file-alt"></i> บันทึก</a>
+      <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
+    </div>
+  </div>
+  <div class="container">
+    <h1><i class="fas fa-file-alt"></i> บันทึก</h1>
+    <h2><i class="fas fa-chart-bar"></i> สถิติ</h2>
+    <div class="stats">
+      <div class="stat-card"><h3><i class="fas fa-link"></i> ลิงก์ทั้งหมด</h3><p id="totalLinks">0</p></div>
+      <div class="stat-card"><h3><i class="fas fa-check-circle"></i> ลิงก์สำเร็จ</h3><p id="successfulLinks">0</p></div>
+      <div class="stat-card"><h3><i class="fas fa-times-circle"></i> ลิงก์ล้มเหลว</h3><p id="failedLinks">0</p></div>
+      <div class="stat-card"><h3><i class="fas fa-exclamation-triangle"></i> ข้อผิดพลาดล่าสุด</h3><p id="lastError">ไม่มี</p></div>
+      <div class="stat-card"><h3><i class="fas fa-users"></i> จำนวนกลุ่ม</h3><p id="totalGroups">0</p></div>
+    </div>
+    <h2><i class="fas fa-list-ul"></i> รายการบันทึก</h2>
+    <div class="logs" id="logContainer"></div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('active');
+    }
+
+    async function fetchLogs() {
+      try {
+        const response = await fetch('/api/logs');
+        if (!response.ok) throw new Error('Failed to fetch logs');
+        const data = await response.json();
+        const { logs, apiStats, totalGroupsJoined } = data;
+
+        document.getElementById('totalLinks').textContent = apiStats.totalLinksSent;
+        document.getElementById('successfulLinks').textContent = apiStats.successfulLinks;
+        document.getElementById('failedLinks').textContent = apiStats.failedLinks;
+        document.getElementById('lastError').textContent = apiStats.lastError ? `${apiStats.lastError} (${new Date(apiStats.lastErrorTime).toLocaleString('th-TH')})` : 'ไม่มี';
+        document.getElementById('totalGroups').textContent = totalGroupsJoined;
+
+        const logContainer = document.getElementById('logContainer');
+        logContainer.innerHTML = logs.length === 0 ? '<div class="log-entry">ยังไม่มีบันทึก</div>' : '';
+        logs.forEach(log => {
+          const div = document.createElement('div');
+          div.className = 'log-entry';
+          div.style.color = log.color || '#1E3A8A';
+          div.textContent = log.text;
+          logContainer.appendChild(div);
+        });
+        logContainer.scrollTop = logContainer.scrollHeight;
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+        document.getElementById('logContainer').innerHTML = '<div class="log-entry" style="color: #EF4444;">เกิดข้อผิดพลาด: ' + error.message + '</div>';
+      }
+    }
+
+    fetchLogs();
+    setInterval(fetchLogs, 5000);
+  </script>
+</body>
+</html>

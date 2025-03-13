@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบแอดมิน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: url('https://i.pinimg.com/1200x/80/7b/0d/807b0d00ea3aab1bdf89012248e9d97a.jpg') no-repeat center center fixed; 
+      background-size: cover; 
+      color: #FFFFFF; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      height: 100vh; 
+    }
+    .header { 
+      position: absolute; 
+      top: 20px; 
+      right: 20px; 
+    }
+    .menu-btn { 
+      background: rgba(30, 58, 138, 0.9); 
+      border: none; 
+      padding: 10px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      backdrop-filter: blur(5px); 
+    }
+    .menu-btn i { color: #FFFFFF; font-size: 1.5em; }
+    .nav-menu { 
+      display: none; 
+      position: absolute; 
+      top: 60px; 
+      right: 0; 
+      background: rgba(30, 58, 138, 0.9); 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      backdrop-filter: blur(5px); 
+      flex-direction: column; 
+      width: 200px; 
+      padding: 10px; 
+    }
+    .nav-menu.active { display: flex; }
+    .nav-menu a { 
+      color: #FFFFFF; 
+      text-decoration: none; 
+      font-weight: 600; 
+      padding: 10px; 
+      border-radius: 6px; 
+      transition: background 0.3s; 
+      display: flex; 
+      align-items: center; 
+    }
+    .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
+    h1 { font-size: 1.8em; font-weight: 700; margin-bottom: 20px; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+    .login-form { 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      width: 100%; 
+      max-width: 400px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+    }
+    input { 
+      padding: 10px; 
+      border: 1px solid #D1D5DB; 
+      border-radius: 6px; 
+      outline: none; 
+      transition: border 0.3s; 
+      background: rgba(255, 255, 255, 0.9); 
+    }
+    input:focus { border-color: #3B82F6; }
+    button { 
+      padding: 10px; 
+      background: #3B82F6; 
+      border: none; 
+      border-radius: 6px; 
+      color: #FFFFFF; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: background 0.3s; 
+    }
+    button:hover { background: #1E3A8A; }
+    i { margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+    <div class="nav-menu" id="navMenu">
+      <a href="/"><i class="fas fa-home"></i> หน้าหลัก</a>
+      <a href="/phones"><i class="fas fa-phone"></i> รายชื่อเบอร์</a>
+      <a href="/details"><i class="fas fa-wallet"></i> รายละเอียดเงิน</a>
+      <a href="/logs"><i class="fas fa-file-alt"></i> บันทึก</a>
+      <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
+    </div>
+  </div>
+  <h1><i class="fas fa-user-shield"></i> เข้าสู่ระบบแอดมิน</h1>
+  <div class="login-form">
+    <input type="text" id="adminCode" placeholder="รหัสแอดมิน" required>
+    <button onclick="login()"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</button>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('navMenu');
+      menu.classList.toggle('active');
+    }
+
+    function login() {
+      const adminCode = document.getElementById('adminCode').value;
+      const correctCode = '0825658423zx';
+      if (adminCode === correctCode) {
+        localStorage.setItem('adminAuthenticated', 'true');
+        window.location.href = '/admin';
+      } else {
+        alert('รหัสแอดมินไม่ถูกต้อง!');
+      }
+    }
+  </script>
+</body>
+</html>

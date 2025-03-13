@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>รายละเอียดเงิน</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <style>
@@ -58,7 +58,6 @@
     }
     .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
     h1 { font-size: 1.8em; font-weight: 700; margin-bottom: 20px; text-align: center; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
-    h2 { font-size: 1.4em; font-weight: 600; margin: 15px 0; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
     .container { max-width: 1200px; margin: 0 auto; }
     table { 
       width: 100%; 
@@ -87,15 +86,9 @@
     </div>
   </div>
   <div class="container">
-    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-    <h2><i class="fas fa-robot"></i> ข้อมูลบอท</h2>
-    <table id="accountsTable">
-      <thead><tr><th>ID</th><th><i class="fas fa-phone"></i> เบอร์บัญชี</th><th><i class="fas fa-signal"></i> สถานะ</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <h2><i class="fas fa-list"></i> รายชื่อเบอร์</h2>
-    <table id="phoneTable">
-      <thead><tr><th>อันดับ</th><th><i class="fas fa-phone"></i> เบอร์</th><th><i class="fas fa-user"></i> ชื่อ</th><th><i class="fas fa-money-bill-wave"></i> รายได้ (บาท)</th><th><i class="fas fa-calendar-alt"></i> วันหมดอายุ</th></tr></thead>
+    <h1><i class="fas fa-wallet"></i> รายละเอียดเงิน</h1>
+    <table id="detailsTable">
+      <thead><tr><th>อันดับ</th><th><i class="fas fa-phone"></i> เบอร์</th><th><i class="fas fa-user"></i> ชื่อ</th><th><i class="fas fa-gift"></i> รหัสอั่งเปา</th><th><i class="fas fa-coins"></i> จำนวน (บาท)</th><th><i class="fas fa-calendar-alt"></i> วันที่อัพเดท</th><th><i class="fas fa-money-bill-wave"></i> ยอดรวม (บาท)</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -106,40 +99,28 @@
       menu.classList.toggle('active');
     }
 
-    async function fetchAccounts() {
+    async function fetchDetails() {
       try {
-        const response = await fetch('/api/accounts');
-        if (!response.ok) throw new Error('Failed to fetch accounts');
-        const accounts = await response.json();
-        const tbody = document.querySelector('#accountsTable tbody');
-        tbody.innerHTML = accounts.length === 0 ? '<tr><td colspan="3">ยังไม่มีบัญชี</td></tr>' : '';
-        accounts.forEach(account => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${account.id}</td><td>${account.phone}</td><td>${account.status}</td>`;
-          tbody.appendChild(tr);
-        });
-      } catch (error) { console.error('Error fetching accounts:', error); }
+        const response = await fetch('/api/phone-details');
+        if (!response.ok) throw new Error('Failed to fetch details');
+        const details = await response.json();
+        const tbody = document.querySelector('#detailsTable tbody');
+        tbody.innerHTML = '';
+        let hasData = false;
+        for (const phone in details) {
+          details[phone].forEach(detail => {
+            hasData = true;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${detail.rank}</td><td>${detail.mobile}</td><td>${detail.name}</td><td>${detail.angpaoCode}</td><td>${detail.amount_baht}</td><td>${new Date(detail.update_date).toLocaleString('th-TH')}</td><td>${detail.totalAmount}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+        if (!hasData) tbody.innerHTML = '<tr><td colspan="7">ยังไม่มีข้อมูล</td></tr>';
+      } catch (error) { console.error('Error fetching details:', error); }
     }
 
-    async function fetchPhones() {
-      try {
-        const response = await fetch('/api/phones');
-        if (!response.ok) throw new Error('Failed to fetch phones');
-        const phones = await response.json();
-        const tbody = document.querySelector('#phoneTable tbody');
-        tbody.innerHTML = phones.length === 0 ? '<tr><td colspan="5">ยังไม่มีเบอร์</td></tr>' : '';
-        phones.forEach(phone => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${phone.rank}</td><td>${phone.number}</td><td>${phone.name}</td><td>${phone.earnings.toFixed(2)}</td><td>${phone.expiresAt ? new Date(phone.expiresAt).toLocaleString('th-TH') : 'ไม่ระบุ'}</td>`;
-          tbody.appendChild(tr);
-        });
-      } catch (error) { console.error('Error fetching phones:', error); }
-    }
-
-    fetchAccounts();
-    fetchPhones();
-    setInterval(fetchAccounts, 5000);
-    setInterval(fetchPhones, 5000);
+    fetchDetails();
+    setInterval(fetchDetails, 5000);
   </script>
 </body>
 </html>
