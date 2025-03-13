@@ -73,6 +73,72 @@
     td { border-bottom: 1px solid #E5E7EB; color: #1E3A8A; }
     tr:hover { background: rgba(243, 244, 246, 0.9); }
     i { margin-right: 8px; }
+
+    /* Form for adding phone */
+    .form { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      max-width: 400px; 
+      margin: 20px auto; 
+      padding: 20px; 
+      background: rgba(255, 255, 255, 0.95); 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+    }
+    input { 
+      padding: 10px; 
+      border: 1px solid #D1D5DB; 
+      border-radius: 6px; 
+      outline: none; 
+      transition: border 0.3s; 
+      background: rgba(255, 255, 255, 0.9); 
+    }
+    input:focus { border-color: #3B82F6; }
+    button { 
+      padding: 10px; 
+      background: #3B82F6; 
+      border: none; 
+      border-radius: 6px; 
+      color: #FFFFFF; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: background 0.3s; 
+    }
+    button:hover { background: #1E3A8A; }
+
+    /* Toast Notification */
+    .toast-container { 
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      z-index: 1000; 
+    }
+    .toast { 
+      background: rgba(255, 255, 255, 0.95); 
+      color: #1E3A8A; 
+      padding: 15px 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+      margin-bottom: 10px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      opacity: 0; 
+      transform: translateX(100%); 
+      animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 4.5s forwards; 
+    }
+    .toast.error { background: rgba(239, 68, 68, 0.95); color: #FFFFFF; }
+    .toast.success { background: rgba(34, 197, 94, 0.95); color: #FFFFFF; }
+    .toast i { font-size: 1.2em; }
+    @keyframes slideIn {
+      0% { opacity: 0; transform: translateX(100%); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOut {
+      0% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(100%); }
+    }
   </style>
 </head>
 <body>
@@ -86,8 +152,19 @@
       <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
     </div>
   </div>
+  <div class="toast-container" id="toastContainer"></div>
   <div class="container">
     <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+    
+    <h2><i class="fas fa-plus-circle"></i> เพิ่มเบอร์</h2>
+    <div class="form">
+      <input type="text" id="phoneInput" placeholder="เบอร์ (เช่น 0987654321)">
+      <input type="text" id="codeInput" placeholder="รหัส 8 หลัก">
+      <input type="text" id="nameInput" placeholder="ชื่อ">
+      <input type="datetime-local" id="expiresAtInput" placeholder="วันหมดอายุ">
+      <button onclick="addPhone()"><i class="fas fa-plus"></i> เพิ่มเบอร์</button>
+    </div>
+
     <h2><i class="fas fa-robot"></i> ข้อมูลบอท</h2>
     <table id="accountsTable">
       <thead><tr><th>ID</th><th><i class="fas fa-phone"></i> เบอร์บัญชี</th><th><i class="fas fa-signal"></i> สถานะ</th></tr></thead>
@@ -106,6 +183,16 @@
       menu.classList.toggle('active');
     }
 
+    // ฟังก์ชันแสดง Toast Notification
+    function showToast(message, type = 'success') {
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'}"></i> ${message}`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000); // ลบหลัง 5 วินาที
+    }
+
     async function fetchAccounts() {
       try {
         const response = await fetch('/api/accounts');
@@ -118,7 +205,10 @@
           tr.innerHTML = `<td>${account.id}</td><td>${account.phone}</td><td>${account.status}</td>`;
           tbody.appendChild(tr);
         });
-      } catch (error) { console.error('Error fetching accounts:', error); }
+      } catch (error) { 
+        console.error('Error fetching accounts:', error); 
+        showToast('เกิดข้อผิดพลาดในการโหลดบัญชี', 'error');
+      }
     }
 
     async function fetchPhones() {
@@ -133,11 +223,48 @@
           tr.innerHTML = `<td>${phone.rank}</td><td>${phone.number}</td><td>${phone.name}</td><td>${phone.earnings.toFixed(2)}</td><td>${phone.expiresAt ? new Date(phone.expiresAt).toLocaleString('th-TH') : 'ไม่ระบุ'}</td>`;
           tbody.appendChild(tr);
         });
-      } catch (error) { console.error('Error fetching phones:', error); }
+      } catch (error) { 
+        console.error('Error fetching phones:', error); 
+        showToast('เกิดข้อผิดพลาดในการโหลดรายชื่อเบอร์', 'error');
+      }
+    }
+
+    async function addPhone() {
+      const phone = document.getElementById('phoneInput').value;
+      const code = document.getElementById('codeInput').value;
+      const name = document.getElementById('nameInput').value;
+      const expiresAt = document.getElementById('expiresAtInput').value;
+      if (!phone || !code || !name) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน!', 'error');
+        return;
+      }
+      try {
+        const response = await fetch('/api/add-phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, code, name, expiresAt })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showToast('เพิ่มเบอร์สำเร็จ!', 'success');
+          document.getElementById('phoneInput').value = '';
+          document.getElementById('codeInput').value = '';
+          document.getElementById('nameInput').value = '';
+          document.getElementById('expiresAtInput').value = '';
+          fetchPhones();
+        } else {
+          showToast(result.error || 'เกิดข้อผิดพลาดในการเพิ่มเบอร์', 'error');
+        }
+      } catch (error) { showToast('เกิดข้อผิดพลาด: ' + error.message, 'error'); }
     }
 
     fetchAccounts();
     fetchPhones();
+    setInterval(fetchAccounts, 5000);
+    setInterval(fetchPhones, 5000);
+  </script>
+</body>
+</html>
     setInterval(fetchAccounts, 5000);
     setInterval(fetchPhones, 5000);
   </script>
