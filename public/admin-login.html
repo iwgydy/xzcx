@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เข้าสู่ระบบแอดมิน</title>
+  <title>🔑 เข้าสู่ระบบแอดมิน</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <style>
@@ -18,80 +18,87 @@
       align-items: center; 
       justify-content: center; 
       height: 100vh; 
+      font-size: 14px; 
     }
     .header { 
       position: absolute; 
-      top: 20px; 
-      right: 20px; 
+      top: 10px; 
+      right: 10px; 
     }
     .menu-btn { 
       background: rgba(30, 58, 138, 0.9); 
       border: none; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       cursor: pointer; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
     }
-    .menu-btn i { color: #FFFFFF; font-size: 1.5em; }
+    .menu-btn i { color: #FFFFFF; font-size: 1.2em; }
     .nav-menu { 
       display: none; 
       position: absolute; 
-      top: 60px; 
+      top: 40px; 
       right: 0; 
       background: rgba(30, 58, 138, 0.9); 
-      border-radius: 8px; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      border-radius: 6px; 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
       flex-direction: column; 
-      width: 200px; 
-      padding: 10px; 
+      width: 160px; 
+      padding: 5px; 
     }
     .nav-menu.active { display: flex; }
     .nav-menu a { 
       color: #FFFFFF; 
       text-decoration: none; 
       font-weight: 600; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       transition: background 0.3s; 
       display: flex; 
       align-items: center; 
+      font-size: 12px; 
     }
     .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
-    h1 { font-size: 1.8em; font-weight: 700; margin-bottom: 20px; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+    h1 { font-size: 1.4em; font-weight: 700; margin-bottom: 10px; text-shadow: 0 0 3px rgba(255, 255, 255, 0.5); }
     .login-form { 
       background: rgba(255, 255, 255, 0.95); 
-      padding: 20px; 
-      border-radius: 8px; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      padding: 15px; 
+      border-radius: 6px; 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
       width: 100%; 
-      max-width: 400px; 
+      max-width: 300px; 
       display: flex; 
       flex-direction: column; 
-      gap: 15px; 
+      gap: 10px; 
     }
     input { 
-      padding: 10px; 
+      padding: 8px; 
       border: 1px solid #D1D5DB; 
-      border-radius: 6px; 
+      border-radius: 4px; 
       outline: none; 
       transition: border 0.3s; 
       background: rgba(255, 255, 255, 0.9); 
+      font-size: 12px; 
     }
     input:focus { border-color: #3B82F6; }
     button { 
-      padding: 10px; 
+      padding: 8px; 
       background: #3B82F6; 
       border: none; 
-      border-radius: 6px; 
+      border-radius: 4px; 
       color: #FFFFFF; 
       font-weight: 600; 
       cursor: pointer; 
       transition: background 0.3s; 
+      font-size: 12px; 
     }
     button:hover { background: #1E3A8A; }
-    i { margin-right: 8px; }
+    i { margin-right: 5px; font-size: 0.9em; }
+    @media (min-width: 768px) {
+      h1 { font-size: 1.8em; }
+      .login-form { max-width: 400px; padding: 20px; }
+      input, button { padding: 10px; font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -101,6 +108,7 @@
       <a href="/"><i class="fas fa-home"></i> หน้าหลัก</a>
       <a href="/phones"><i class="fas fa-phone"></i> รายชื่อเบอร์</a>
       <a href="/details"><i class="fas fa-wallet"></i> รายละเอียดเงิน</a>
+      <a href="/expired"><i class="fas fa-calendar-times"></i> เบอร์ที่หมดอายุ</a>
       <a href="/logs"><i class="fas fa-file-alt"></i> บันทึก</a>
       <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
     </div>
