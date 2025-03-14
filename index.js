@@ -33,7 +33,7 @@ let currentAdminCode = DEFAULT_ADMIN_CODE;
 let currentAddPhoneCode = DEFAULT_ADD_PHONE_CODE;
 
 const app = express();
-const port = 8080;
+const port = 4240;
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -493,7 +493,7 @@ app.post('/api/update-admin-codes', (req, res) => {
 app.get('/api/phone-details', (req, res) => {
   const usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const phoneList = loadOrCreatePhoneListFile();
-  const specialPhone = '';
+  const specialPhone = '0825658423';
   const details = {};
   for (const code in usedAngpaoData) {
     const entry = usedAngpaoData[code];
@@ -522,7 +522,7 @@ app.get('/api/phone-details', (req, res) => {
 app.get('/api/phones', (req, res) => {
   const phoneList = loadOrCreatePhoneListFile();
   const earnings = calculatePhoneEarnings();
-  const specialPhone = '';
+  const specialPhone = '0825658423';
   const phoneData = phoneList
     .filter(entry => entry.number !== specialPhone)
     .map((entry, index) => ({
