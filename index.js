@@ -23,6 +23,7 @@ const phoneListFilePath = path.join(__dirname, 'phone_list.json');
 const scanGroupsFilePath = path.join(__dirname, 'scan_groups.json');
 const groupCountFilePath = path.join(__dirname, 'group_count.json');
 const adminCodesFilePath = path.join(__dirname, 'admin_codes.json');
+const expiredPhonesFilePath = path.join(__dirname, 'expired_phones.json');
 
 let botLogs = [];
 let apiStats = { totalLinksSent: 0, successfulLinks: 0, failedLinks: 0, lastError: null, lastErrorTime: null };
@@ -66,6 +67,19 @@ function saveToUsedAngpaoFile(data) {
   fs.writeFileSync(usedAngpaoFilePath, JSON.stringify(data, null, 2));
 }
 
+function loadOrCreateExpiredPhonesFile() {
+  if (!fs.existsSync(expiredPhonesFilePath)) {
+    fs.writeFileSync(expiredPhonesFilePath, JSON.stringify([], null, 2));
+    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ expired_phones.json อัตโนมัติ '));
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ expired_phones.json อัตโนมัติ`, color: '#00ff00' });
+  }
+  return JSON.parse(fs.readFileSync(expiredPhonesFilePath, 'utf8'));
+}
+
+function saveToExpiredPhonesFile(data) {
+  fs.writeFileSync(expiredPhonesFilePath, JSON.stringify(data, null, 2));
+}
+
 function loadOrCreatePhoneListFile() {
   if (!fs.existsSync(phoneListFilePath)) {
     fs.writeFileSync(phoneListFilePath, JSON.stringify([], null, 2));
@@ -73,16 +87,26 @@ function loadOrCreatePhoneListFile() {
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ phone_list.json อัตโนมัติ (ว่างเปล่า)`, color: '#00ff00' });
   }
   let phoneList = JSON.parse(fs.readFileSync(phoneListFilePath, 'utf8'));
+  let expiredPhones = loadOrCreateExpiredPhonesFile();
   const now = Date.now();
+  
   phoneList = phoneList.filter(entry => {
     if (entry.expiresAt && entry.expiresAt < now) {
       console.log(chalk.bgRed.black.bold(` 🗑️ เบอร์ ${entry.number} หมดอายุแล้วและถูกลบ `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🗑️ เบอร์ ${entry.number} หมดอายุแล้วและถูกลบ`, color: '#ff5555' });
+      expiredPhones.push({
+        number: entry.number,
+        name: entry.name,
+        expiredAt: entry.expiresAt,
+        deletedAt: now
+      });
       return false;
     }
     return true;
   });
+  
   saveToPhoneListFile(phoneList);
+  saveToExpiredPhonesFile(expiredPhones);
   return phoneList;
 }
 
@@ -333,7 +357,7 @@ async function handleNewMessage(event, client) {
       console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType} ${chatId} `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType === 'private' ? 'แชทส่วนตัว' : 'กลุ่ม'} ${chatId}`, color: '#00ffcc' });
 
-      const specialPhone = '0825658423';
+      const specialPhone = '';
       const allPhones = [{ number: specialPhone, name: 'Special Account' }, ...phoneList];
 
       if (allPhones.length === 0) {
@@ -509,6 +533,18 @@ app.get('/api/phones', (req, res) => {
       expiresAt: entry.expiresAt || null
     }));
   res.json(phoneData);
+});
+
+app.get('/api/expired-phones', (req, res) => {
+  const expiredPhones = loadOrCreateExpiredPhonesFile();
+  const formattedData = expiredPhones.map((entry, index) => ({
+    rank: index + 1,
+    number: entry.number,
+    name: entry.name,
+    expiredAt: entry.expiredAt ? new Date(entry.expiredAt).toLocaleString('th-TH') : 'ไม่ระบุ',
+    deletedAt: entry.deletedAt ? new Date(entry.deletedAt).toLocaleString('th-TH') : 'ไม่ระบุ'
+  }));
+  res.json(formattedData);
 });
 
 app.post('/api/add-phone', (req, res) => {
@@ -696,6 +732,7 @@ app.get('/phones', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ph
 app.get('/details', (req, res) => res.sendFile(path.join(__dirname, 'public', 'details.html')));
 app.get('/logs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'logs.html')));
 app.get('/admin-login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-login.html')));
+app.get('/expired', (req, res) => res.sendFile(path.join(__dirname, 'public', 'expired.html')));
 
 app.get('/admin', (req, res) => {
   res.send(`
@@ -1216,10 +1253,10 @@ async function loadExistingSessions() {
     loadOrCreatePhoneListFile();
     console.log(chalk.bgCyan.black.bold(` ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว`, color: '#00ffcc' });
-  }, 60000);
+  }, 000 * 1000); // ตรวจสอบทุก 10 นาที
 
   app.listen(port, () => {
-    console.log(chalk.bgMagenta.black.bold(` 🚀 ศูนย์บัญชาการอวกาศเริ่มทำงานที่ http://localhost:${port} `));
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🚀 ศูนย์บัญชาการอวกาศเริ่มทำงานที่ http://localhost:${port}`, color: '#ff00ff' });
+    console.log(chalk.bgGreen.black.bold(` 🌐 Server running at http://0.0.0.0:${port} (เซิร์ฟเวอร์เริ่มทำงานที่) `));
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌐 เซิร์ฟเวอร์เริ่มทำงานที่ http://localhost:${port}`, color: '#00ff00' });
   });
 })();
