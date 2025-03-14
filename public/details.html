@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายละเอียดเงิน</title>
+  <title>💰 รายละเอียดเงิน</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <style>
@@ -13,65 +13,73 @@
       background: url('https://i.pinimg.com/1200x/80/7b/0d/807b0d00ea3aab1bdf89012248e9d97a.jpg') no-repeat center center fixed; 
       background-size: cover; 
       color: #FFFFFF; 
-      line-height: 1.6; 
-      padding: 20px; 
+      line-height: 1.4; 
+      padding: 10px; 
+      font-size: 14px; 
     }
     .header { 
       display: flex; 
       justify-content: flex-end; 
       align-items: center; 
-      margin-bottom: 20px; 
+      margin-bottom: 10px; 
     }
     .menu-btn { 
       background: rgba(30, 58, 138, 0.9); 
       border: none; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       cursor: pointer; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
     }
-    .menu-btn i { color: #FFFFFF; font-size: 1.5em; }
+    .menu-btn i { color: #FFFFFF; font-size: 1.2em; }
     .nav-menu { 
       display: none; 
       position: absolute; 
-      top: 60px; 
-      right: 20px; 
+      top: 40px; 
+      right: 10px; 
       background: rgba(30, 58, 138, 0.9); 
-      border-radius: 8px; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      border-radius: 6px; 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
       flex-direction: column; 
-      width: 200px; 
-      padding: 10px; 
+      width: 160px; 
+      padding: 5px; 
     }
     .nav-menu.active { display: flex; }
     .nav-menu a { 
       color: #FFFFFF; 
       text-decoration: none; 
       font-weight: 600; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       transition: background 0.3s; 
       display: flex; 
       align-items: center; 
+      font-size: 12px; 
     }
     .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
-    h1 { font-size: 1.8em; font-weight: 700; margin-bottom: 20px; text-align: center; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
-    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.4em; font-weight: 700; margin-bottom: 10px; text-align: center; text-shadow: 0 0 3px rgba(255, 255, 255, 0.5); }
+    .container { max-width: 100%; margin: 0 auto; }
     table { 
       width: 100%; 
       border-collapse: collapse; 
       background: rgba(255, 255, 255, 0.95); 
-      border-radius: 8px; 
+      border-radius: 6px; 
       overflow: hidden; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
+      font-size: 12px; 
     }
-    th, td { padding: 12px 15px; text-align: left; }
-    th { background: #1E3A8A; color: #FFFFFF; font-weight: 600; text-transform: uppercase; }
+    th, td { padding: 8px 10px; text-align: left; }
+    th { background: #1E3A8A; color: #FFFFFF; font-weight: 600; text-transform: uppercase; font-size: 11px; }
     td { border-bottom: 1px solid #E5E7EB; color: #1E3A8A; }
     tr:hover { background: rgba(243, 244, 246, 0.9); }
-    i { margin-right: 8px; }
+    i { margin-right: 5px; font-size: 0.9em; }
+    @media (min-width: 768px) {
+      .container { max-width: 900px; }
+      h1 { font-size: 1.8em; }
+      table { font-size: 14px; }
+      th, td { padding: 12px 15px; }
+      th { font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -81,6 +89,7 @@
       <a href="/"><i class="fas fa-home"></i> หน้าหลัก</a>
       <a href="/phones"><i class="fas fa-phone"></i> รายชื่อเบอร์</a>
       <a href="/details"><i class="fas fa-wallet"></i> รายละเอียดเงิน</a>
+      <a href="/expired"><i class="fas fa-calendar-times"></i> เบอร์ที่หมดอายุ</a>
       <a href="/logs"><i class="fas fa-file-alt"></i> บันทึก</a>
       <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
     </div>
