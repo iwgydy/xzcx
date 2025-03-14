@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>📊 Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <style>
@@ -13,124 +13,93 @@
       background: url('https://i.pinimg.com/1200x/80/7b/0d/807b0d00ea3aab1bdf89012248e9d97a.jpg') no-repeat center center fixed; 
       background-size: cover; 
       color: #FFFFFF; 
-      line-height: 1.6; 
-      padding: 20px; 
+      line-height: 1.4; 
+      padding: 10px; 
+      font-size: 14px; 
     }
     .header { 
       display: flex; 
       justify-content: flex-end; 
       align-items: center; 
-      margin-bottom: 20px; 
+      margin-bottom: 10px; 
     }
     .menu-btn { 
       background: rgba(30, 58, 138, 0.9); 
       border: none; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       cursor: pointer; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
     }
-    .menu-btn i { color: #FFFFFF; font-size: 1.5em; }
+    .menu-btn i { color: #FFFFFF; font-size: 1.2em; }
     .nav-menu { 
       display: none; 
       position: absolute; 
-      top: 60px; 
-      right: 20px; 
+      top: 40px; 
+      right: 10px; 
       background: rgba(30, 58, 138, 0.9); 
-      border-radius: 8px; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-      backdrop-filter: blur(5px); 
+      border-radius: 6px; 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
       flex-direction: column; 
-      width: 200px; 
-      padding: 10px; 
+      width: 160px; 
+      padding: 5px; 
     }
     .nav-menu.active { display: flex; }
     .nav-menu a { 
       color: #FFFFFF; 
       text-decoration: none; 
       font-weight: 600; 
-      padding: 10px; 
-      border-radius: 6px; 
+      padding: 8px; 
+      border-radius: 4px; 
       transition: background 0.3s; 
       display: flex; 
       align-items: center; 
+      font-size: 12px; 
     }
     .nav-menu a:hover { background: rgba(59, 130, 246, 0.8); }
-    h1 { font-size: 1.8em; font-weight: 700; margin-bottom: 20px; text-align: center; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
-    h2 { font-size: 1.4em; font-weight: 600; margin: 15px 0; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
-    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.4em; font-weight: 700; margin-bottom: 10px; text-align: center; text-shadow: 0 0 3px rgba(255, 255, 255, 0.5); }
+    h2 { font-size: 1.1em; font-weight: 600; margin: 10px 0; text-shadow: 0 0 3px rgba(255, 255, 255, 0.5); }
+    .container { max-width: 100%; margin: 0 auto; }
     table { 
       width: 100%; 
       border-collapse: collapse; 
       background: rgba(255, 255, 255, 0.95); 
-      border-radius: 8px; 
+      border-radius: 6px; 
       overflow: hidden; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3); 
+      font-size: 12px; 
     }
-    th, td { padding: 12px 15px; text-align: left; }
-    th { background: #1E3A8A; color: #FFFFFF; font-weight: 600; text-transform: uppercase; }
+    th, td { padding: 8px 10px; text-align: left; }
+    th { background: #1E3A8A; color: #FFFFFF; font-weight: 600; text-transform: uppercase; font-size: 11px; }
     td { border-bottom: 1px solid #E5E7EB; color: #1E3A8A; }
     tr:hover { background: rgba(243, 244, 246, 0.9); }
-    i { margin-right: 8px; }
-
-    /* Form for adding phone */
-    .form { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px; 
-      max-width: 400px; 
-      margin: 20px auto; 
-      padding: 20px; 
-      background: rgba(255, 255, 255, 0.95); 
-      border-radius: 8px; 
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); 
-    }
-    input { 
-      padding: 10px; 
-      border: 1px solid #D1D5DB; 
-      border-radius: 6px; 
-      outline: none; 
-      transition: border 0.3s; 
-      background: rgba(255, 255, 255, 0.9); 
-    }
-    input:focus { border-color: #3B82F6; }
-    button { 
-      padding: 10px; 
-      background: #3B82F6; 
-      border: none; 
-      border-radius: 6px; 
-      color: #FFFFFF; 
-      font-weight: 600; 
-      cursor: pointer; 
-      transition: background 0.3s; 
-    }
-    button:hover { background: #1E3A8A; }
+    i { margin-right: 5px; font-size: 0.9em; }
 
     /* Toast Notification */
     .toast-container { 
       position: fixed; 
-      top: 20px; 
-      right: 20px; 
+      top: 10px; 
+      right: 10px; 
       z-index: 1000; 
     }
     .toast { 
       background: rgba(255, 255, 255, 0.95); 
       color: #1E3A8A; 
-      padding: 15px 20px; 
-      border-radius: 8px; 
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
-      margin-bottom: 10px; 
+      padding: 10px 15px; 
+      border-radius: 6px; 
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+      margin-bottom: 8px; 
       display: flex; 
       align-items: center; 
-      gap: 10px; 
+      gap: 8px; 
       opacity: 0; 
       transform: translateX(100%); 
       animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 4.5s forwards; 
+      font-size: 12px; 
     }
     .toast.error { background: rgba(239, 68, 68, 0.95); color: #FFFFFF; }
     .toast.success { background: rgba(34, 197, 94, 0.95); color: #FFFFFF; }
-    .toast i { font-size: 1.2em; }
+    .toast i { font-size: 1em; }
     @keyframes slideIn {
       0% { opacity: 0; transform: translateX(100%); }
       100% { opacity: 1; transform: translateX(0); }
@@ -138,6 +107,14 @@
     @keyframes slideOut {
       0% { opacity: 1; transform: translateX(0); }
       100% { opacity: 0; transform: translateX(100%); }
+    }
+    @media (min-width: 768px) {
+      .container { max-width: 900px; }
+      h1 { font-size: 1.8em; }
+      h2 { font-size: 1.4em; }
+      table { font-size: 14px; }
+      th, td { padding: 12px 15px; }
+      th { font-size: 12px; }
     }
   </style>
 </head>
@@ -148,6 +125,7 @@
       <a href="/"><i class="fas fa-home"></i> หน้าหลัก</a>
       <a href="/phones"><i class="fas fa-phone"></i> รายชื่อเบอร์</a>
       <a href="/details"><i class="fas fa-wallet"></i> รายละเอียดเงิน</a>
+      <a href="/expired"><i class="fas fa-calendar-times"></i> เบอร์ที่หมดอายุ</a>
       <a href="/logs"><i class="fas fa-file-alt"></i> บันทึก</a>
       <a href="/admin-login"><i class="fas fa-user-shield"></i> แอดมิน</a>
     </div>
@@ -156,15 +134,6 @@
   <div class="container">
     <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
     
-    <h2><i class="fas fa-plus-circle"></i> เพิ่มเบอร์</h2>
-    <div class="form">
-      <input type="text" id="phoneInput" placeholder="เบอร์ (เช่น 0987654321)">
-      <input type="text" id="codeInput" placeholder="รหัส 8 หลัก">
-      <input type="text" id="nameInput" placeholder="ชื่อ">
-      <input type="datetime-local" id="expiresAtInput" placeholder="วันหมดอายุ">
-      <button onclick="addPhone()"><i class="fas fa-plus"></i> เพิ่มเบอร์</button>
-    </div>
-
     <h2><i class="fas fa-robot"></i> ข้อมูลบอท</h2>
     <table id="accountsTable">
       <thead><tr><th>ID</th><th><i class="fas fa-phone"></i> เบอร์บัญชี</th><th><i class="fas fa-signal"></i> สถานะ</th></tr></thead>
@@ -183,14 +152,13 @@
       menu.classList.toggle('active');
     }
 
-    // ฟังก์ชันแสดง Toast Notification
     function showToast(message, type = 'success') {
       const toastContainer = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
       toast.innerHTML = `<i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'}"></i> ${message}`;
       toastContainer.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000); // ลบหลัง 5 วินาที
+      setTimeout(() => toast.remove(), 5000);
     }
 
     async function fetchAccounts() {
@@ -229,42 +197,8 @@
       }
     }
 
-    async function addPhone() {
-      const phone = document.getElementById('phoneInput').value;
-      const code = document.getElementById('codeInput').value;
-      const name = document.getElementById('nameInput').value;
-      const expiresAt = document.getElementById('expiresAtInput').value;
-      if (!phone || !code || !name) {
-        showToast('กรุณากรอกข้อมูลให้ครบถ้วน!', 'error');
-        return;
-      }
-      try {
-        const response = await fetch('/api/add-phone', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, code, name, expiresAt })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          showToast('เพิ่มเบอร์สำเร็จ!', 'success');
-          document.getElementById('phoneInput').value = '';
-          document.getElementById('codeInput').value = '';
-          document.getElementById('nameInput').value = '';
-          document.getElementById('expiresAtInput').value = '';
-          fetchPhones();
-        } else {
-          showToast(result.error || 'เกิดข้อผิดพลาดในการเพิ่มเบอร์', 'error');
-        }
-      } catch (error) { showToast('เกิดข้อผิดพลาด: ' + error.message, 'error'); }
-    }
-
     fetchAccounts();
     fetchPhones();
-    setInterval(fetchAccounts, 5000);
-    setInterval(fetchPhones, 5000);
-  </script>
-</body>
-</html>
     setInterval(fetchAccounts, 5000);
     setInterval(fetchPhones, 5000);
   </script>
