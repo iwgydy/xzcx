@@ -1250,10 +1250,10 @@ async function loadExistingSessions() {
   loadOrCreateAdminCodesFile();
 
   setInterval(() => {
-    loadOrCreatePhoneListFile();
-    console.log(chalk.bgCyan.black.bold(` ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว `));
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว`, color: '#00ffcc' });
-  }, 000 * 1000); // ตรวจสอบทุก 10 นาที
+  loadOrCreatePhoneListFile();
+  console.log(chalk.bgCyan.black.bold(` ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว `));
+  botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว`, color: '#00ffcc' });
+}, 10 * 60 * 1000); // ตรวจสอบทุก 10 นาที
 
   app.listen(port, () => {
     console.log(chalk.bgGreen.black.bold(` 🌐 Server running at http://0.0.0.0:${port} (เซิร์ฟเวอร์เริ่มทำงานที่) `));
