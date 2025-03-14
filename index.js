@@ -11,8 +11,8 @@ const chalk = require('chalk');
 const API_ID = 23491254; // แทนที่ด้วย API_ID ของคุณ
 const API_HASH = '5f21a8b3cd574ea9c96d1f1898932173'; // แทนที่ด้วย API_HASH ของคุณ
 const ADMIN_ID = 7520172820; // แทนที่ด้วย Telegram ID ของแอดมิน
-const ADMIN_CODE = '0825658423zx';
-const ADD_PHONE_CODE = '975699zx';
+const DEFAULT_ADMIN_CODE = '0825658423zx'; // รหัสเริ่มต้นสำหรับแอดมิน
+const DEFAULT_ADD_PHONE_CODE = '975699zx'; // รหัสเริ่มต้นสำหรับเพิ่มเบอร์
 
 const clients = [];
 const sessionsDir = path.join(__dirname, 'sessions');
@@ -22,11 +22,14 @@ const usedAngpaoFilePath = path.join(__dirname, 'used_angpao.json');
 const phoneListFilePath = path.join(__dirname, 'phone_list.json');
 const scanGroupsFilePath = path.join(__dirname, 'scan_groups.json');
 const groupCountFilePath = path.join(__dirname, 'group_count.json');
+const adminCodesFilePath = path.join(__dirname, 'admin_codes.json');
 
 let botLogs = [];
 let apiStats = { totalLinksSent: 0, successfulLinks: 0, failedLinks: 0, lastError: null, lastErrorTime: null };
 let totalGroupsJoined = 0;
 let scanGroups = {};
+let currentAdminCode = DEFAULT_ADMIN_CODE;
+let currentAddPhoneCode = DEFAULT_ADD_PHONE_CODE;
 
 const app = express();
 const port = 8080;
@@ -110,6 +113,22 @@ function saveToScanGroupsFile(data) {
   fs.writeFileSync(scanGroupsFilePath, JSON.stringify(data, null, 2));
 }
 
+function loadOrCreateAdminCodesFile() {
+  if (!fs.existsSync(adminCodesFilePath)) {
+    const defaultCodes = { adminCode: DEFAULT_ADMIN_CODE, addPhoneCode: DEFAULT_ADD_PHONE_CODE };
+    fs.writeFileSync(adminCodesFilePath, JSON.stringify(defaultCodes, null, 2));
+    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ admin_codes.json อัตโนมัติด้วยรหัสเริ่มต้น '));
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ admin_codes.json อัตโนมัติด้วยรหัสเริ่มต้น`, color: '#00ff00' });
+  }
+  const data = JSON.parse(fs.readFileSync(adminCodesFilePath, 'utf8'));
+  currentAdminCode = data.adminCode || DEFAULT_ADMIN_CODE;
+  currentAddPhoneCode = data.addPhoneCode || DEFAULT_ADD_PHONE_CODE;
+}
+
+function saveAdminCodesFile() {
+  fs.writeFileSync(adminCodesFilePath, JSON.stringify({ adminCode: currentAdminCode, addPhoneCode: currentAddPhoneCode }, null, 2));
+}
+
 function calculatePhoneEarnings() {
   const usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const earnings = {};
@@ -165,7 +184,7 @@ async function handleAdmin(event, client) {
     return;
   }
 
-  if (code !== ADD_PHONE_CODE) {
+  if (code !== currentAddPhoneCode) {
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ รหัสไม่ถูกต้อง ${code} โดย ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌌 รหัส 8 หลักไม่ถูกต้อง!' });
     return;
@@ -421,10 +440,36 @@ async function handleNewMessage(event, client) {
 }
 
 // Web API Endpoints
+app.get('/api/admin-codes', (req, res) => {
+  res.json({ adminCode: currentAdminCode, addPhoneCode: currentAddPhoneCode });
+});
+
+app.post('/api/update-admin-codes', (req, res) => {
+  const { adminCode, addPhoneCode, authCode } = req.body;
+
+  if (authCode !== currentAdminCode) {
+    return res.status(401).json({ error: 'รหัสแอดมินไม่ถูกต้อง' });
+  }
+
+  if (adminCode && typeof adminCode === 'string' && adminCode.length >= 8) {
+    currentAdminCode = adminCode;
+    console.log(chalk.bgYellow.black.bold(` ✏️ เปลี่ยนรหัสแอดมินเป็น ${currentAdminCode} ผ่านเว็บ `));
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ เปลี่ยนรหัสแอดมินเป็น ${currentAdminCode} ผ่านเว็บ`, color: '#ffff00' });
+  }
+  if (addPhoneCode && typeof addPhoneCode === 'string' && addPhoneCode.length >= 8) {
+    currentAddPhoneCode = addPhoneCode;
+    console.log(chalk.bgYellow.black.bold(` ✏️ เปลี่ยนรหัสเพิ่มเบอร์เป็น ${currentAddPhoneCode} ผ่านเว็บ `));
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ เปลี่ยนรหัสเพิ่มเบอร์เป็น ${currentAddPhoneCode} ผ่านเว็บ`, color: '#ffff00' });
+  }
+
+  saveAdminCodesFile();
+  res.json({ message: 'อัปเดตรหัสสำเร็จ', adminCode: currentAdminCode, addPhoneCode: currentAddPhoneCode });
+});
+
 app.get('/api/phone-details', (req, res) => {
   const usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const phoneList = loadOrCreatePhoneListFile();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const details = {};
   for (const code in usedAngpaoData) {
     const entry = usedAngpaoData[code];
@@ -453,7 +498,7 @@ app.get('/api/phone-details', (req, res) => {
 app.get('/api/phones', (req, res) => {
   const phoneList = loadOrCreatePhoneListFile();
   const earnings = calculatePhoneEarnings();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const phoneData = phoneList
     .filter(entry => entry.number !== specialPhone)
     .map((entry, index) => ({
@@ -471,7 +516,7 @@ app.post('/api/add-phone', (req, res) => {
   const phoneRegex = /^0\d{9}$/;
 
   if (!phone || !code || !name || !expiresAt) return res.status(400).json({ error: 'กรุณาใส่เบอร์ รหัส 8 หลัก ชื่อ และวันหมดอายุ' });
-  if (code !== ADD_PHONE_CODE) return res.status(400).json({ error: 'รหัส 8 หลักไม่ถูกต้อง' });
+  if (code !== currentAddPhoneCode) return res.status(400).json({ error: 'รหัส 8 หลักไม่ถูกต้อง' });
   if (!phoneRegex.test(phone)) return res.status(400).json({ error: 'เบอร์ไม่ถูกต้อง ต้องเป็น 10 หลักและขึ้นต้นด้วย 0' });
 
   const expiresTimestamp = new Date(expiresAt).getTime();
@@ -497,6 +542,31 @@ app.delete('/api/delete-phone', (req, res) => {
   res.json({ message: `ลบเบอร์ ${phone} สำเร็จ` });
   console.log(chalk.bgRed.black.bold(` 🗑️ ลบเบอร์ ${phone} ผ่านเว็บ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🗑️ ลบเบอร์ ${phone} ผ่านเว็บ`, color: '#ff5555' });
+});
+
+app.put('/api/edit-phone', (req, res) => {
+  const { oldPhone, newPhone, name, expiresAt } = req.body;
+  const phoneRegex = /^0\d{9}$/;
+  const phoneList = loadOrCreatePhoneListFile();
+  const phoneEntry = phoneList.find(entry => entry.number === oldPhone);
+
+  if (!phoneEntry) return res.status(400).json({ error: 'ไม่พบเบอร์นี้ในระบบ' });
+  if (!phoneRegex.test(newPhone)) return res.status(400).json({ error: 'เบอร์ใหม่ไม่ถูกต้อง ต้องเป็น 10 หลักและขึ้นต้นด้วย 0' });
+
+  const expiresTimestamp = new Date(expiresAt).getTime();
+  if (isNaN(expiresTimestamp) || expiresTimestamp <= Date.now()) return res.status(400).json({ error: 'วันหมดอายุไม่ถูกต้องหรือผ่านมาแล้ว' });
+
+  if (phoneList.some(entry => entry.number === newPhone && entry.number !== oldPhone)) {
+    return res.status(400).json({ error: 'เบอร์ใหม่นี้มีอยู่ในระบบแล้ว' });
+  }
+
+  phoneEntry.number = newPhone;
+  phoneEntry.name = name;
+  phoneEntry.expiresAt = expiresTimestamp;
+  saveToPhoneListFile(phoneList);
+  res.json({ message: `แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} หมดอายุ ${new Date(expiresTimestamp).toLocaleString('th-TH')} สำเร็จ` });
+  console.log(chalk.bgYellow.black.bold(` ✏️ แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} ผ่านเว็บ `));
+  botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} ผ่านเว็บ`, color: '#ffff00' });
 });
 
 app.put('/api/edit-phone-name', (req, res) => {
@@ -635,207 +705,237 @@ app.get('/admin', (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>🛠️ แผงควบคุมแอดมิน</title>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&display=swap');
-        body {
-          font-family: 'Prompt', sans-serif;
-          background: #000000;
-          color: #00ffcc;
-          padding: 20px;
-          margin: 0;
-          overflow-x: hidden;
-          position: relative;
-          font-size: 14px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+          font-family: 'Inter', sans-serif; 
+          background: url('https://i.pinimg.com/1200x/80/7b/0d/807b0d00ea3aab1bdf89012248e9d97a.jpg') no-repeat center center fixed; 
+          background-size: cover; 
+          color: #FFFFFF; 
+          line-height: 1.6; 
+          display: flex; 
+          flex-direction: column; 
+          min-height: 100vh; 
+          padding: 0;
         }
-        .stars {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
-          opacity: 0.8;
-          z-index: -1;
-          animation: twinkle 3s infinite;
+        .header { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          padding: 15px 20px; 
+          background: rgba(30, 58, 138, 0.9); 
+          width: 100%; 
+          position: fixed; 
+          top: 0; 
+          z-index: 1000; 
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
+        .header h1 { 
+          font-size: 1.5em; 
+          text-shadow: 0 0 5px rgba(255, 255, 255, 0.7); 
+          margin: 0; 
         }
-        nav {
-          background: rgba(10, 10, 35, 0.9);
-          padding: 10px;
-          border-radius: 8px;
-          box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
-          display: flex;
-          justify-content: center;
-          gap: 10px;
-          margin-bottom: 15px;
+        .back-btn { 
+          background: rgba(255, 255, 255, 0.2); 
+          border: none; 
+          padding: 8px; 
+          border-radius: 4px; 
+          cursor: pointer; 
+          transition: background 0.3s; 
         }
-        nav a {
-          color: #00ffcc;
-          text-decoration: none;
-          font-weight: bold;
-          padding: 5px 10px;
-          border-radius: 4px;
-          transition: all 0.3s;
+        .back-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .back-btn i { color: #FFFFFF; font-size: 1.2em; }
+        .nav-menu { 
+          display: none; /* ซ่อนเมนูแนวตั้ง */
         }
-        nav a:hover {
-          background: rgba(0, 255, 204, 0.2);
-          text-shadow: 0 0 10px #00ffcc;
+        .container { 
+          width: 100%; 
+          margin: 70px 10px 10px 10px; 
+          padding: 10px; 
+          flex: 1; 
         }
-        h1, h2 {
-          text-align: center;
-          font-size: 1.8em;
-          text-shadow: 0 0 10px #00ffcc, 0 0 20px #ff00ff;
-          animation: glow 1.5s infinite alternate;
-          margin: 10px 0;
+        h2 { 
+          font-size: 1.3em; 
+          font-weight: 600; 
+          margin: 20px 0 10px; 
+          text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); 
+          display: flex; 
+          align-items: center; 
+          gap: 6px; 
         }
-        @keyframes glow {
-          from { text-shadow: 0 0 5px #00ffcc; }
-          to { text-shadow: 0 0 15px #00ffcc, 0 0 25px #ff00ff; }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          background: rgba(255, 255, 255, 0.95); 
+          border-radius: 8px; 
+          overflow: hidden; 
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+          margin-bottom: 15px; 
+          font-size: 0.9em; 
         }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-          background: rgba(10, 10, 35, 0.9);
-          box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
-          border-radius: 8px;
-          overflow: hidden;
+        th, td { padding: 10px; text-align: left; }
+        th { background: #1E3A8A; color: #FFFFFF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85em; }
+        td { border-bottom: 1px solid #E5E7EB; color: #1E3A8A; }
+        tr:hover { background: rgba(243, 244, 246, 0.9); }
+        .form-container { 
+          display: flex; 
+          flex-direction: column; 
+          gap: 15px; 
+          margin: 15px 0; 
         }
-        th, td {
-          padding: 10px;
-          text-align: left;
-          border-bottom: 1px solid #333366;
+        .form, .code-form { 
+          width: 100%; 
+          padding: 15px; 
+          background: rgba(255, 255, 255, 0.95); 
+          border-radius: 8px; 
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+          display: flex; 
+          flex-direction: column; 
+          gap: 10px; 
         }
-        th {
-          background: linear-gradient(90deg, #00ffcc, #ff00ff);
-          color: #000;
-          font-weight: bold;
-          text-transform: uppercase;
+        .form h3, .code-form h3 { 
+          font-size: 1.1em; 
+          color: #1E3A8A; 
+          margin-bottom: 8px; 
+          text-align: center; 
         }
-        td {
-          color: #fff;
-          transition: background 0.3s;
+        input { 
+          padding: 8px; 
+          border: 1px solid #D1D5DB; 
+          border-radius: 4px; 
+          outline: none; 
+          transition: border 0.3s; 
+          background: #FFFFFF; 
+          font-size: 0.9em; 
+          width: 100%; 
         }
-        tr:hover {
-          background: rgba(0, 255, 204, 0.2);
+        input:focus { border-color: #3B82F6; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        button { 
+          padding: 10px; 
+          background: #3B82F6; 
+          border: none; 
+          border-radius: 4px; 
+          color: #FFFFFF; 
+          font-weight: 600; 
+          cursor: pointer; 
+          transition: background 0.3s, transform 0.2s; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          gap: 6px; 
+          font-size: 0.9em; 
         }
-        .form {
-          margin-top: 15px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          max-width: 300px;
-          margin-left: auto;
-          margin-right: auto;
+        button:hover { background: #1E3A8A; transform: scale(1.02); }
+        .edit-btn, .delete-btn { 
+          padding: 6px 10px; 
+          font-size: 0.85em; 
+          margin-right: 5px; 
         }
-        input {
-          padding: 8px;
-          border: 2px solid #00ffcc;
-          background: rgba(10, 10, 35, 0.8);
-          color: #fff;
-          border-radius: 6px;
-          outline: none;
-          transition: all 0.3s;
-          width: 100%;
-          box-sizing: border-box;
+        .edit-btn { background: #22C55E; }
+        .edit-btn:hover { background: #16A34A; }
+        .delete-btn { background: #EF4444; }
+        .delete-btn:hover { background: #B91C1C; }
+        .toast-container { 
+          position: fixed; 
+          top: 10px; 
+          right: 10px; 
+          z-index: 1001; 
         }
-        input:focus {
-          border-color: #ff00ff;
-          box-shadow: 0 0 10px #ff00ff;
+        .toast { 
+          background: rgba(255, 255, 255, 0.95); 
+          color: #1E3A8A; 
+          padding: 10px 15px; 
+          border-radius: 6px; 
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); 
+          margin-bottom: 8px; 
+          display: flex; 
+          align-items: center; 
+          gap: 8px; 
+          opacity: 0; 
+          transform: translateX(100%); 
+          animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 4.5s forwards; 
+          font-size: 0.9em; 
         }
-        button {
-          padding: 8px 15px;
-          background: linear-gradient(90deg, #00ffcc, #ff00ff);
-          border: none;
-          border-radius: 6px;
-          color: #000;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.3s;
-          width: 100%;
+        .toast.error { background: rgba(239, 68, 68, 0.95); color: #FFFFFF; }
+        .toast.success { background: rgba(34, 197, 94, 0.95); color: #FFFFFF; }
+        .toast i { font-size: 1em; }
+        @keyframes slideIn {
+          0% { opacity: 0; transform: translateX(100%); }
+          100% { opacity: 1; transform: translateX(0); }
         }
-        button:hover {
-          transform: scale(1.05);
-          box-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
+        @keyframes slideOut {
+          0% { opacity: 1; transform: translateX(0); }
+          100% { opacity: 0; transform: translateX(100%); }
         }
-        .edit-input {
-          width: 80px;
-          padding: 4px;
-          margin-right: 5px;
-        }
-        .delete-btn {
-          background: #ff5555;
-          padding: 5px 10px;
-          width: auto;
-        }
-        .delete-btn:hover {
-          background: #ff7777;
-          transform: scale(1.1);
-        }
-        #status {
-          margin-top: 10px;
-          text-align: center;
-          color: #ff5555;
+        @media (min-width: 768px) {
+          .container { max-width: 700px; margin: 70px auto 20px auto; }
+          .form-container { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+          .form, .code-form { max-width: 350px; }
+          .header h1 { font-size: 2em; }
         }
       </style>
     </head>
     <body>
-      <div class="stars"></div>
-      <nav>
-        <a href="/">🏠 หน้าหลัก</a>
-        <a href="/phones">📱 รายชื่อดวงดาว</a>
-        <a href="/details">💰 รายละเอียดเงิน</a>
-        <a href="/logs">📜 บันทึกอวกาศ</a>
-        <a href="/admin">🛠️ แอดมิน</a>
-      </nav>
-      <h1>🛠️ แผงควบคุมแอดมิน</h1>
-      <h2>🤖 บัญชี Telegram</h2>
-      <table id="accountsTable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>📞 เบอร์บัญชี</th>
-            <th>📡 สถานะ</th>
-            <th>🗑️ ลบ</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="form">
-        <input type="text" id="phoneInput" placeholder="เบอร์โทร (เช่น +66971432317)">
-        <button id="sendCodeBtn" onclick="sendCode()">✨ ส่งรหัสยืนยัน</button>
-        <input type="text" id="codeInput" placeholder="รหัสยืนยันที่ได้รับ">
-        <input type="password" id="passwordInput" placeholder="รหัสผ่าน 2FA (ถ้ามี)" style="display: none;">
-        <button id="verifyCodeBtn" onclick="verifyCode()">✅ ยืนยันและล็อกอิน</button>
+      <div class="header">
+        <h1><i class="fas fa-user-shield"></i> แผงควบคุมแอดมิน</h1>
+        <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i></a>
       </div>
-      <h2>📱 จัดการเบอร์ดวงดาว</h2>
-      <table id="phonesTable">
-        <thead>
-          <tr>
-            <th>อันดับ</th>
-            <th>🌠 เบอร์</th>
-            <th>👤 ชื่อ</th>
-            <th>💰 ยอดเงิน (บาท)</th>
-            <th>📅 วันหมดอายุ</th>
-            <th>🗑️ ลบ</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="status"></div>
+      <div class="nav-menu" id="navMenu">
+        <!-- เมนูถูกซ่อน -->
+      </div>
+      <div class="toast-container" id="toastContainer"></div>
+      <div class="container">
+        <h2><i class="fas fa-robot"></i> บัญชี Telegram</h2>
+        <table id="accountsTable">
+          <thead><tr><th>ID</th><th><i class="fas fa-phone"></i> เบอร์</th><th><i class="fas fa-signal"></i> สถานะ</th><th><i class="fas fa-tools"></i> จัดการ</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="form-container">
+          <div class="form">
+            <h3><i class="fas fa-plus-circle"></i> เพิ่มบัญชี Telegram</h3>
+            <input type="text" id="telegramPhoneInput" placeholder="เบอร์โทร (เช่น +66987654321)">
+            <button onclick="sendCode()"><i class="fas fa-paper-plane"></i> ส่งรหัสยืนยัน</button>
+            <input type="text" id="telegramCodeInput" placeholder="รหัสยืนยันที่ได้รับ">
+            <input type="password" id="telegramPasswordInput" placeholder="รหัสผ่าน 2FA (ถ้ามี)" style="display: none;">
+            <button onclick="verifyCode()"><i class="fas fa-check"></i> ยืนยันและล็อกอิน</button>
+          </div>
+
+          <div class="form">
+            <h3><i class="fas fa-plus-circle"></i> เพิ่มเบอร์ดวงดาว</h3>
+            <input type="text" id="phoneInput" placeholder="เบอร์ (เช่น 0987654321)">
+            <input type="text" id="codeInput" placeholder="รหัส 8 หลัก">
+            <input type="text" id="nameInput" placeholder="ชื่อ">
+            <input type="datetime-local" id="expiresAtInput" placeholder="วันหมดอายุ">
+            <button onclick="addPhone()"><i class="fas fa-plus"></i> เพิ่มเบอร์</button>
+          </div>
+
+          <div class="code-form">
+            <h3><i class="fas fa-key"></i> จัดการรหัส</h3>
+            <input type="text" id="currentAdminCodeInput" placeholder="รหัสแอดมินปัจจุบัน">
+            <input type="text" id="newAdminCodeInput" placeholder="รหัสแอดมินใหม่ (ขั้นต่ำ 8 ตัว)">
+            <input type="text" id="newAddPhoneCodeInput" placeholder="รหัสเพิ่มเบอร์ใหม่ (ขั้นต่ำ 8 ตัว)">
+            <button onclick="updateCodes()"><i class="fas fa-save"></i> อัปเดตรหัส</button>
+          </div>
+        </div>
+
+        <h2><i class="fas fa-list"></i> จัดการเบอร์ดวงดาว</h2>
+        <table id="phonesTable">
+          <thead><tr><th>อันดับ</th><th><i class="fas fa-phone"></i> เบอร์</th><th><i class="fas fa-user"></i> ชื่อ</th><th><i class="fas fa-money-bill-wave"></i> รายได้</th><th><i class="fas fa-calendar-alt"></i> หมดอายุ</th><th><i class="fas fa-tools"></i> จัดการ</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
       <script>
-        console.log('[DEBUG] Admin page script loaded');
-
-        function debugLog(message, color = '#00ffcc') {
-          console.log('[DEBUG] ' + message);
-          const statusDiv = document.getElementById('status');
-          statusDiv.textContent = message;
-          statusDiv.style.color = color;
+        function showToast(message, type = 'success') {
+          const toastContainer = document.getElementById('toastContainer');
+          const toast = document.createElement('div');
+          toast.className = \`toast \${type}\`;
+          toast.innerHTML = \`<i class="\${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'}"></i> \${message}\`;
+          toastContainer.appendChild(toast);
+          setTimeout(() => toast.remove(), 5000);
         }
 
         async function fetchAccounts() {
@@ -844,24 +944,15 @@ app.get('/admin', (req, res) => {
             if (!response.ok) throw new Error('Failed to fetch accounts');
             const accounts = await response.json();
             const tbody = document.querySelector('#accountsTable tbody');
-            tbody.innerHTML = '';
-            if (accounts.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">ยังไม่มีบัญชีในระบบ</td></tr>';
-            } else {
-              accounts.forEach(account => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = [
-                  '<td>' + account.id + '</td>',
-                  '<td>📞 ' + account.phone + '</td>',
-                  '<td>📡 ' + account.status + '</td>',
-                  '<td><button class="delete-btn" onclick="deleteBot(\\'' + account.phone + '\\')">🗑️ ลบ</button></td>'
-                ].join('');
-                tbody.appendChild(tr);
-              });
-            }
+            tbody.innerHTML = accounts.length === 0 ? '<tr><td colspan="4">ยังไม่มีบัญชี</td></tr>' : '';
+            accounts.forEach(account => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = \`<td>\${account.id}</td><td>\${account.phone}</td><td>\${account.status}</td><td><button class="delete-btn" onclick="deleteBot('\${account.phone}')"><i class="fas fa-trash"></i> ลบ</button></td>\`;
+              tbody.appendChild(tr);
+            });
           } catch (error) {
             console.error('Error fetching accounts:', error);
-            debugLog('ไม่สามารถดึงข้อมูลบัญชีได้: ' + error.message, '#ff5555');
+            showToast('เกิดข้อผิดพลาดในการโหลดบัญชี', 'error');
           }
         }
 
@@ -871,37 +962,31 @@ app.get('/admin', (req, res) => {
             if (!response.ok) throw new Error('Failed to fetch phones');
             const phones = await response.json();
             const tbody = document.querySelector('#phonesTable tbody');
-            tbody.innerHTML = '';
-            if (phones.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">ยังไม่มีเบอร์ในระบบ</td></tr>';
-            } else {
-              phones.forEach(phone => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = [
-                  '<td>' + phone.rank + '</td>',
-                  '<td>🌠 ' + phone.number + '</td>',
-                  '<td><input type="text" class="edit-input" value="' + phone.name + '" onchange="editName(\\'' + phone.number + '\\', this.value)"></td>',
-                  '<td>' + phone.earnings.toFixed(2) + '</td>',
-                  '<td>📅 ' + (phone.expiresAt ? new Date(phone.expiresAt).toLocaleString('th-TH') : 'ไม่ระบุ') + '</td>',
-                  '<td><button class="delete-btn" onclick="deletePhone(\\'' + phone.number + '\\')">🗑️ ลบ</button></td>'
-                ].join('');
-                tbody.appendChild(tr);
-              });
-            }
+            tbody.innerHTML = phones.length === 0 ? '<tr><td colspan="6">ยังไม่มีเบอร์</td></tr>' : '';
+            phones.forEach(phone => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = \`
+                <td>\${phone.rank}</td>
+                <td><input type="text" class="edit-input" value="\${phone.number}" onchange="editPhone('\${phone.number}', this, 'number')"></td>
+                <td><input type="text" class="edit-input" value="\${phone.name}" onchange="editPhone('\${phone.number}', this, 'name')"></td>
+                <td>\${phone.earnings.toFixed(2)}</td>
+                <td><input type="datetime-local" class="edit-input" value="\${phone.expiresAt ? new Date(phone.expiresAt).toISOString().slice(0,16) : ''}" onchange="editPhone('\${phone.number}', this, 'expiresAt')"></td>
+                <td>
+                  <button class="edit-btn" onclick="savePhoneEdit('\${phone.number}')"><i class="fas fa-save"></i></button>
+                  <button class="delete-btn" onclick="deletePhone('\${phone.number}')"><i class="fas fa-trash"></i></button>
+                </td>
+              \`;
+              tbody.appendChild(tr);
+            });
           } catch (error) {
             console.error('Error fetching phones:', error);
-            debugLog('ไม่สามารถดึงข้อมูลเบอร์ได้: ' + error.message, '#ff5555');
+            showToast('เกิดข้อผิดพลาดในการโหลดรายชื่อเบอร์', 'error');
           }
         }
 
         async function sendCode() {
-          console.log('[DEBUG] Send code button clicked');
-          const phone = document.getElementById('phoneInput').value.trim();
-          if (!phone) {
-            debugLog('กรุณาใส่เบอร์โทร!', '#ff5555');
-            return;
-          }
-          console.log('[DEBUG] Phone entered:', phone);
+          const phone = document.getElementById('telegramPhoneInput').value.trim();
+          if (!phone) return showToast('กรุณาใส่เบอร์โทร!', 'error');
           try {
             const response = await fetch('/api/send-code', {
               method: 'POST',
@@ -909,28 +994,18 @@ app.get('/admin', (req, res) => {
               body: JSON.stringify({ phone })
             });
             const result = await response.json();
-            if (response.ok) {
-              debugLog(result.message, '#00ff00');
-            } else {
-              debugLog(result.error, '#ff5555');
-            }
+            if (response.ok) showToast(result.message, 'success');
+            else showToast(result.error, 'error');
           } catch (error) {
-            debugLog('การเชื่อมต่อ Telegram ล้มเหลว: ' + error.message, '#ff5555');
-            console.error('Error in sendCode:', error);
+            showToast('การเชื่อมต่อ Telegram ล้มเหลว: ' + error.message, 'error');
           }
         }
 
         async function verifyCode() {
-          console.log('[DEBUG] Verify code button clicked');
-          const phone = document.getElementById('phoneInput').value.trim();
-          const code = document.getElementById('codeInput').value.trim();
-          const password = document.getElementById('passwordInput').value.trim();
-
-          if (!phone || !code) {
-            debugLog('กรุณาใส่เบอร์โทรและรหัสยืนยัน!', '#ff5555');
-            return;
-          }
-
+          const phone = document.getElementById('telegramPhoneInput').value.trim();
+          const code = document.getElementById('telegramCodeInput').value.trim();
+          const password = document.getElementById('telegramPasswordInput').value.trim();
+          if (!phone || !code) return showToast('กรุณาใส่เบอร์โทรและรหัสยืนยัน!', 'error');
           try {
             const response = await fetch('/api/verify-code', {
               method: 'POST',
@@ -939,22 +1014,44 @@ app.get('/admin', (req, res) => {
             });
             const result = await response.json();
             if (response.ok) {
-              debugLog(result.message, '#00ff00');
-              document.getElementById('phoneInput').value = '';
-              document.getElementById('codeInput').value = '';
-              document.getElementById('passwordInput').value = '';
-              document.getElementById('passwordInput').style.display = 'none';
+              showToast(result.message, 'success');
+              document.getElementById('telegramPhoneInput').value = '';
+              document.getElementById('telegramCodeInput').value = '';
+              document.getElementById('telegramPasswordInput').value = '';
+              document.getElementById('telegramPasswordInput').style.display = 'none';
               fetchAccounts();
             } else {
-              debugLog(result.error, '#ff5555');
-              if (result.requiresPassword) {
-                document.getElementById('passwordInput').style.display = 'block';
-                debugLog('กรุณาใส่รหัสผ่าน 2FA!', '#ff5555');
-              }
+              showToast(result.error, 'error');
+              if (result.requiresPassword) document.getElementById('telegramPasswordInput').style.display = 'block';
             }
           } catch (error) {
-            debugLog('การเชื่อมต่อ Telegram ล้มเหลว: ' + error.message, '#ff5555');
-            console.error('Error in verifyCode:', error);
+            showToast('การเชื่อมต่อ Telegram ล้มเหลว: ' + error.message, 'error');
+          }
+        }
+
+        async function addPhone() {
+          const phone = document.getElementById('phoneInput').value.trim();
+          const code = document.getElementById('codeInput').value.trim();
+          const name = document.getElementById('nameInput').value.trim();
+          const expiresAt = document.getElementById('expiresAtInput').value;
+          if (!phone || !code || !name || !expiresAt) return showToast('กรุณากรอกข้อมูลให้ครบถ้วน!', 'error');
+          try {
+            const response = await fetch('/api/add-phone', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone, code, name, expiresAt })
+            });
+            const result = await response.json();
+            if (response.ok) {
+              showToast('เพิ่มเบอร์สำเร็จ!', 'success');
+              document.getElementById('phoneInput').value = '';
+              document.getElementById('codeInput').value = '';
+              document.getElementById('nameInput').value = '';
+              document.getElementById('expiresAtInput').value = '';
+              fetchPhones();
+            } else showToast(result.error, 'error');
+          } catch (error) {
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
           }
         }
 
@@ -968,32 +1065,46 @@ app.get('/admin', (req, res) => {
             });
             const result = await response.json();
             if (response.ok) {
-              debugLog(result.message, '#00ff00');
+              showToast(result.message, 'success');
               fetchPhones();
-            } else {
-              debugLog(result.error, '#ff5555');
-            }
+            } else showToast(result.error, 'error');
           } catch (error) {
-            debugLog('เกิดข้อผิดพลาด: ' + error.message, '#ff5555');
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
           }
         }
 
-        async function editName(phone, name) {
+        let editData = {};
+        function editPhone(oldPhone, input, field) {
+          if (!editData[oldPhone]) editData[oldPhone] = {};
+          if (field === 'expiresAt') {
+            editData[oldPhone][field] = new Date(input.value).getTime();
+          } else {
+            editData[oldPhone][field] = input.value;
+          }
+        }
+
+        async function savePhoneEdit(oldPhone) {
+          if (!editData[oldPhone]) return showToast('ไม่มีข้อมูลที่แก้ไขสำหรับเบอร์ ' + oldPhone, 'error');
+          const data = {
+            oldPhone,
+            newPhone: editData[oldPhone].number || oldPhone,
+            name: editData[oldPhone].name || '',
+            expiresAt: editData[oldPhone].expiresAt || new Date().setFullYear(new Date().getFullYear() + 1)
+          };
           try {
-            const response = await fetch('/api/edit-phone-name', {
+            const response = await fetch('/api/edit-phone', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone, name })
+              body: JSON.stringify(data)
             });
             const result = await response.json();
             if (response.ok) {
-              debugLog(result.message, '#00ff00');
+              showToast(result.message, 'success');
+              delete editData[oldPhone];
               fetchPhones();
-            } else {
-              debugLog(result.error, '#ff5555');
-            }
+            } else showToast(result.error, 'error');
           } catch (error) {
-            debugLog('เกิดข้อผิดพลาด: ' + error.message, '#ff5555');
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
           }
         }
 
@@ -1007,13 +1118,39 @@ app.get('/admin', (req, res) => {
             });
             const result = await response.json();
             if (response.ok) {
-              debugLog(result.message, '#00ff00');
+              showToast(result.message, 'success');
               fetchAccounts();
-            } else {
-              debugLog(result.error, '#ff5555');
-            }
+            } else showToast(result.error, 'error');
           } catch (error) {
-            debugLog('เกิดข้อผิดพลาด: ' + error.message, '#ff5555');
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+          }
+        }
+
+        async function updateCodes() {
+          const currentAdminCode = document.getElementById('currentAdminCodeInput').value.trim();
+          const newAdminCode = document.getElementById('newAdminCodeInput').value.trim();
+          const newAddPhoneCode = document.getElementById('newAddPhoneCodeInput').value.trim();
+
+          if (!currentAdminCode) return showToast('กรุณาใส่รหัสแอดมินปัจจุบัน', 'error');
+          if (!newAdminCode && !newAddPhoneCode) return showToast('กรุณาใส่รหัสใหม่อย่างน้อย 1 รหัส', 'error');
+          if (newAdminCode && newAdminCode.length < 8) return showToast('รหัสแอดมินใหม่ต้องมีอย่างน้อย 8 ตัว', 'error');
+          if (newAddPhoneCode && newAddPhoneCode.length < 8) return showToast('รหัสเพิ่มเบอร์ใหม่ต้องมีอย่างน้อย 8 ตัว', 'error');
+
+          try {
+            const response = await fetch('/api/update-admin-codes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ adminCode: newAdminCode || undefined, addPhoneCode: newAddPhoneCode || undefined, authCode: currentAdminCode })
+            });
+            const result = await response.json();
+            if (response.ok) {
+              showToast(result.message, 'success');
+              document.getElementById('currentAdminCodeInput').value = '';
+              document.getElementById('newAdminCodeInput').value = '';
+              document.getElementById('newAddPhoneCodeInput').value = '';
+            } else showToast(result.error, 'error');
+          } catch (error) {
+            showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
           }
         }
 
@@ -1073,6 +1210,7 @@ async function loadExistingSessions() {
 (async () => {
   await loadExistingSessions();
   loadOrCreateGroupCountFile();
+  loadOrCreateAdminCodesFile();
 
   setInterval(() => {
     loadOrCreatePhoneListFile();
