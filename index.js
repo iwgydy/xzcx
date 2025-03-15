@@ -285,6 +285,7 @@ async function handleNewMessage(event, client) {
     loadOrCreateScanGroupsFile();
     const now = Date.now();
 
+    // การจัดการลิงก์เชิญ
     const inviteLinkRegex = /(?:https?:\/\/)?t\.me\/(?:joinchat\/|\+)?([a-zA-Z0-9_-]+)/i;
     const inviteMatch = text.match(inviteLinkRegex);
 
@@ -315,6 +316,27 @@ async function handleNewMessage(event, client) {
       }
     }
 
+    // การตรวจสอบและส่งต่อภาพ
+    if (message.media && message.media.className === 'MessageMediaPhoto') {
+      console.log(chalk.bgYellow.black.bold(` ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId} `));
+      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId}`, color: '#ffff00' });
+
+      try {
+        // ส่งต่อข้อความที่มีภาพไปยัง @E771VIPCHNM_BOT
+        await client.forwardMessages('@E771VIPCHNM_BOT', {
+          messages: message.id,
+          fromPeer: message.chatId,
+        });
+
+        console.log(chalk.bgGreen.black.bold(` ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ `));
+        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ`, color: '#00ff00' });
+      } catch (error) {
+        console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ล้มเหลวในการส่งต่อภาพไปยัง @E771VIPCHNM_BOT: ${error.message} `));
+        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ล้มเหลวในการส่งต่อภาพ: ${error.message}`, color: '#ff5555' });
+      }
+    }
+
+    // การจัดการอั่งเปา
     if (chatType === 'private' || (scanGroups[chatId] && scanGroups[chatId].expiresAt > now)) {
       const regex = /https:\/\/gift\.truemoney\.com\/campaign\/\?v=([a-zA-Z0-9]+)/;
       const matchResult = text.match(regex);
