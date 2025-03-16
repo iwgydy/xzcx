@@ -395,7 +395,7 @@ async function handleNewMessage(event, client) {
         const phonesToProcess = allPhones.slice(i, i + 2);
         const promises = phonesToProcess.map(async (entry, index) => {
           const paymentPhone = entry.number;
-          const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
+          const apiUrl = `https://store.cyber-eafe.pro/api/topp/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
 
           console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌐 เรียก API: ${apiUrl} `));
           botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌐 เรียก API: ${apiUrl}`, color: '#00ffcc' });
