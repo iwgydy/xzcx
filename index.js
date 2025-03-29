@@ -285,49 +285,35 @@ async function handleNewMessage(event, client) {
     loadOrCreateScanGroupsFile();
     const now = Date.now();
 
-    // การจัดการลิงก์เชิญ
+    // Handle invite links (unchanged)
     const inviteLinkRegex = /(?:https?:\/\/)?t\.me\/(?:joinchat\/|\+)?([a-zA-Z0-9_-]+)/i;
     const inviteMatch = text.match(inviteLinkRegex);
-
     if (inviteMatch) {
       const inviteCode = inviteMatch[1];
       console.log(chalk.bgYellow.black.bold(` ${botLabel} 🌠 พบลิงก์เชิญ: ${inviteMatch[0]} (Code: ${inviteCode})`));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌠 พบลิงก์เชิญ: ${inviteMatch[0]}`, color: '#ffff00' });
-
       try {
         const joinResult = await client.invoke(new Api.messages.ImportChatInvite({ hash: inviteCode }));
         const newChatId = String(joinResult.chats[0].id.value);
-
         totalGroupsJoined++;
         saveGroupCountFile();
-
         console.log(chalk.bgGreen.black.bold(` ${botLabel} 🌟 เข้าร่วมกลุ่มใหม่ ${newChatId} สำเร็จ (กลุ่มที่ ${totalGroupsJoined})`));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌟 เข้าร่วมกลุ่มใหม่ ${newChatId} สำเร็จ (กลุ่มที่ ${totalGroupsJoined})`, color: '#00ff00' });
-
         const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
         scanGroups[newChatId] = { expiresAt };
         saveToScanGroupsFile(scanGroups);
-
-        console.log(chalk.bgGreen.black.bold(` ${botLabel} 🌟 เปิดการสแกนอั่งเปาในกลุ่ม ${newChatId} ถึง ${new Date(expiresAt).toLocaleString('th-TH')}`));
-        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌟 เปิดการสแกนอั่งเปาในกลุ่ม ${newChatId} ถึง ${new Date(expiresAt).toLocaleString('th-TH')}`, color: '#00ff00' });
       } catch (joinError) {
         console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ล้มเหลวในการเข้าร่วมกลุ่ม: ${joinError.message}`));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ล้มเหลวในการเข้าร่วมกลุ่ม: ${joinError.message}`, color: '#ff5555' });
       }
     }
 
-    // การตรวจสอบและส่งต่อภาพ
+    // Handle photo forwarding (unchanged)
     if (message.media && message.media.className === 'MessageMediaPhoto') {
       console.log(chalk.bgYellow.black.bold(` ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId} `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId}`, color: '#ffff00' });
-
       try {
-        // ส่งต่อข้อความที่มีภาพไปยัง @E771VIPCHNM_BOT
-        await client.forwardMessages('@E771VIPCHNM_BOT', {
-          messages: message.id,
-          fromPeer: message.chatId,
-        });
-
+        await client.forwardMessages('@E771VIPCHNM_BOT', { messages: message.id, fromPeer: message.chatId });
         console.log(chalk.bgGreen.black.bold(` ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ`, color: '#00ff00' });
       } catch (error) {
@@ -336,7 +322,7 @@ async function handleNewMessage(event, client) {
       }
     }
 
-    // การจัดการอั่งเปา
+    // Handle TrueMoney gift redemption
     if (chatType === 'private' || (scanGroups[chatId] && scanGroups[chatId].expiresAt > now)) {
       const regex = /https:\/\/gift\.truemoney\.com\/campaign\/\?v=([a-zA-Z0-9]+)/;
       const matchResult = text.match(regex);
@@ -350,11 +336,11 @@ async function handleNewMessage(event, client) {
       const angpaoLink = matchResult[0];
       const angpaoCode = matchResult[1];
 
+      // Check if link already exists (unchanged)
       try {
         const existingLinksResponse = await fetch('http://de01.uniplex.xyz:1636/api/data/telegram');
         const existingLinks = await existingLinksResponse.json();
         const isLinkExist = existingLinks.some(item => item.link === angpaoLink);
-
         if (isLinkExist) {
           console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ ลิงก์ ${angpaoLink} มีอยู่ในระบบแล้ว ข้ามการบันทึก `));
           botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ลิงก์ ${angpaoLink} มีอยู่ในระบบแล้ว ข้ามการบันทึก`, color: '#ffff00' });
@@ -375,10 +361,6 @@ async function handleNewMessage(event, client) {
 
       let usedAngpaoData = loadOrCreateUsedAngpaoFile();
       const phoneList = loadOrCreatePhoneListFile();
-
-      console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType} ${chatId} `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType === 'private' ? 'แชทส่วนตัว' : 'กลุ่ม'} ${chatId}`, color: '#00ffcc' });
-
       const specialPhone = '';
       const allPhones = [{ number: specialPhone, name: 'Special Account' }, ...phoneList];
 
@@ -391,89 +373,90 @@ async function handleNewMessage(event, client) {
       console.log(chalk.bgYellow.black.bold(` ${botLabel} 📞 พบ ${allPhones.length} เบอร์ (รวมเบอร์พิเศษ) `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📞 พบ ${allPhones.length} เบอร์ (รวมเบอร์พิเศษ)`, color: '#ffff00' });
 
-      for (let i = 0; i < allPhones.length; i += 2) {
-        const phonesToProcess = allPhones.slice(i, i + 2);
-        const promises = phonesToProcess.map(async (entry, index) => {
-          const paymentPhone = entry.number;
-          const apiUrl = `https://store.cyber-eafe.pro/api/topp/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
+      // Optimized redemption function with retries
+      const redeemAngpao = async (phoneEntry, attempt = 1, maxAttempts = 3) => {
+        const paymentPhone = phoneEntry.number;
+        const apiUrl = `https://store.cyber-eafe.pro/api/topp/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
 
-          console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌐 เรียก API: ${apiUrl} `));
-          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌐 เรียก API: ${apiUrl}`, color: '#00ffcc' });
+        console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt}) `));
+        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt})`, color: '#00ffcc' });
 
-          apiStats.totalLinksSent++;
+        apiStats.totalLinksSent++;
 
-          try {
-            const response = await axios.get(apiUrl, { timeout: 5000 });
-            const responseData = response.data;
+        try {
+          const response = await axios.get(apiUrl, { timeout: 10000 }); // Increased timeout to 10s
+          const responseData = response.data;
 
-            console.log(chalk.bgYellow.black.bold(` ${botLabel} 📩 ได้รับ response: ${JSON.stringify(responseData)} `));
-            botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📩 ได้รับ response: ${JSON.stringify(responseData)}`, color: '#ffff00' });
+          console.log(chalk.bgYellow.black.bold(` ${botLabel} 📩 ได้รับ response: ${JSON.stringify(responseData)} `));
+          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📩 ได้รับ response: ${JSON.stringify(responseData)}`, color: '#ffff00' });
 
-            if (response.status === 200 && responseData.status.code === "SUCCESS") {
-              apiStats.successfulLinks++;
-              const amount = parseFloat(responseData.data.my_ticket?.amount_baht || responseData.data.voucher.amount_baht);
-              const detail = {
-                mobile: paymentPhone,
-                update_date: Date.now(),
-                amount_baht: amount.toFixed(2),
-                full_name: responseData.data.owner_profile?.full_name || "ไม่ระบุ"
-              };
+          if (response.status === 200 && responseData.status.code === "SUCCESS") {
+            apiStats.successfulLinks++;
+            const amount = parseFloat(responseData.data.my_ticket?.amount_baht || responseData.data.voucher.amount_baht);
+            const detail = {
+              mobile: paymentPhone,
+              update_date: Date.now(),
+              amount_baht: amount.toFixed(2),
+              full_name: responseData.data.owner_profile?.full_name || "ไม่ระบุ"
+            };
 
-              if (!usedAngpaoData[angpaoCode]) {
-                usedAngpaoData[angpaoCode] = { details: [], chatId: chatId, usedAt: new Date().toISOString(), totalAmount: responseData.data.voucher.amount_baht };
-              }
-
-              const existingDetailIndex = usedAngpaoData[angpaoCode].details.findIndex(d => d.mobile === paymentPhone);
-              if (existingDetailIndex !== -1) {
-                const existingAmount = parseFloat(usedAngpaoData[angpaoCode].details[existingDetailIndex].amount_baht) || 0;
-                usedAngpaoData[angpaoCode].details[existingDetailIndex].amount_baht = (existingAmount + amount).toFixed(2);
-                usedAngpaoData[angpaoCode].details[existingDetailIndex].update_date = Date.now();
-              } else {
-                usedAngpaoData[angpaoCode].details.push(detail);
-              }
-
-              if (paymentPhone !== specialPhone) {
-                saveToUsedAngpaoFile(usedAngpaoData);
-              }
-
-              console.log(
-                chalk.bgGreen.black.bold(` ${botLabel} 💰 เติมสำเร็จ! `) +
-                chalk.cyan(` ซอง: ${angpaoCode} `) +
-                chalk.green(` จำนวน: ${amount} บาท `) +
-                chalk.magenta(` เบอร์: ${paymentPhone} `) +
-                chalk.yellow(` [อันดับ ${i + index + 1}] `) +
-                chalk.gray(`[${new Date().toLocaleTimeString()}]`)
-              );
-              botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 💰 เติมสำเร็จ ${angpaoCode} -> ${paymentPhone} ${amount} บาท [อันดับ ${i + index + 1}]`, color: '#00ff00' });
-            } else {
-              apiStats.failedLinks++;
-              console.log(
-                chalk.bgRed.black.bold(` ${botLabel} ⚠️ API ไม่สำเร็จ `) +
-                chalk.cyan(` ซอง: ${angpaoCode} `) +
-                chalk.magenta(` เบอร์: ${paymentPhone} `) +
-                chalk.red(` สถานะ: ${responseData.status.code} `) +
-                chalk.gray(`[${new Date().toLocaleTimeString()}]`)
-              );
-              botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ API ไม่สำเร็จ ${angpaoCode} -> ${paymentPhone}: ${responseData.status.code}`, color: '#ff5555' });
+            if (!usedAngpaoData[angpaoCode]) {
+              usedAngpaoData[angpaoCode] = { details: [], chatId: chatId, usedAt: new Date().toISOString(), totalAmount: responseData.data.voucher.amount_baht };
             }
-          } catch (error) {
-            apiStats.failedLinks++;
-            apiStats.lastError = error.message;
-            apiStats.lastErrorTime = new Date().toISOString();
+
+            const existingDetailIndex = usedAngpaoData[angpaoCode].details.findIndex(d => d.mobile === paymentPhone);
+            if (existingDetailIndex !== -1) {
+              const existingAmount = parseFloat(usedAngpaoData[angpaoCode].details[existingDetailIndex].amount_baht) || 0;
+              usedAngpaoData[angpaoCode].details[existingDetailIndex].amount_baht = (existingAmount + amount).toFixed(2);
+              usedAngpaoData[angpaoCode].details[existingDetailIndex].update_date = Date.now();
+            } else {
+              usedAngpaoData[angpaoCode].details.push(detail);
+            }
+
+            if (paymentPhone !== specialPhone) {
+              saveToUsedAngpaoFile(usedAngpaoData);
+            }
+
             console.log(
-              chalk.bgRed.black.bold(` ${botLabel} ⚠️ เติมล้มเหลว `) +
+              chalk.bgGreen.black.bold(` ${botLabel} 💰 เติมสำเร็จ! `) +
               chalk.cyan(` ซอง: ${angpaoCode} `) +
+              chalk.green(` จำนวน: ${amount} บาท `) +
               chalk.magenta(` เบอร์: ${paymentPhone} `) +
-              chalk.red(` เหตุผล: ${error.message} `) +
               chalk.gray(`[${new Date().toLocaleTimeString()}]`)
             );
-            botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ เติมล้มเหลว ${angpaoCode} -> ${paymentPhone}: ${error.message}`, color: '#ff5555' });
+            botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 💰 เติมสำเร็จ ${angpaoCode} -> ${paymentPhone} ${amount} บาท`, color: '#00ff00' });
+          } else {
+            throw new Error(`API status: ${responseData.status.code}`);
           }
-        });
+        } catch (error) {
+          apiStats.failedLinks++;
+          apiStats.lastError = error.message;
+          apiStats.lastErrorTime = new Date().toISOString();
 
-        await Promise.all(promises);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+          if (attempt < maxAttempts) {
+            console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ ลองใหม่ครั้งที่ ${attempt + 1} สำหรับ ${paymentPhone} `));
+            botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ลองใหม่ครั้งที่ ${attempt + 1} สำหรับ ${paymentPhone}`, color: '#ffff00' });
+            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay before retry
+            return redeemAngpao(phoneEntry, attempt + 1, maxAttempts);
+          }
+
+          console.log(
+            chalk.bgRed.black.bold(` ${botLabel} ⚠️ เติมล้มเหลว `) +
+            chalk.cyan(` ซอง: ${angpaoCode} `) +
+            chalk.magenta(` เบอร์: ${paymentPhone} `) +
+            chalk.red(` เหตุผล: ${error.message} `) +
+            chalk.gray(`[${new Date().toLocaleTimeString()}]`)
+          );
+          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ เติมล้มเหลว ${angpaoCode} -> ${paymentPhone}: ${error.message}`, color: '#ff5555' });
+        }
+      };
+
+      // Process all phones in parallel
+      console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType} ${chatId} `));
+      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType === 'private' ? 'แชทส่วนตัว' : 'กลุ่ม'} ${chatId}`, color: '#00ffcc' });
+
+      const redemptionPromises = allPhones.map(phoneEntry => redeemAngpao(phoneEntry));
+      await Promise.allSettled(redemptionPromises); // Use Promise.allSettled to continue even if some fail
     } else {
       console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ กลุ่ม ${chatId} ไม่ได้เปิดการสแกนอั่งเปา หรือหมดอายุแล้ว `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ กลุ่ม ${chatId} ไม่ได้เปิดการสแกนอั่งเปา หรือหมดอายุแล้ว`, color: '#ff5555' });
