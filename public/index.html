@@ -133,7 +133,8 @@
   <div class="toast-container" id="toastContainer"></div>
   <div class="container">
     <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-    
+    <div id="todayEarnings"> </div>  <!--Added div to display today's earning-->
+
     <h2><i class="fas fa-robot"></i> ข้อมูลบอท</h2>
     <table id="accountsTable">
       <thead><tr><th>ID</th><th><i class="fas fa-phone"></i> เบอร์บัญชี</th><th><i class="fas fa-signal"></i> สถานะ</th></tr></thead>
@@ -191,11 +192,26 @@
           tr.innerHTML = `<td>${phone.rank}</td><td>${phone.number}</td><td>${phone.name}</td><td>${phone.earnings.toFixed(2)}</td><td>${phone.expiresAt ? new Date(phone.expiresAt).toLocaleString('th-TH') : 'ไม่ระบุ'}</td>`;
           tbody.appendChild(tr);
         });
+        calculateTodayStats(phones);
       } catch (error) { 
         console.error('Error fetching phones:', error); 
         showToast('เกิดข้อผิดพลาดในการโหลดรายชื่อเบอร์', 'error');
       }
     }
+
+    function calculateTodayStats(phones) {
+      const today = new Date();
+      let todayEarnings = 0;
+      phones.forEach(phone => {
+        const earningDate = new Date(phone.date); //Assumes phone object has a 'date' property. Adjust as needed.
+        if (earningDate.toDateString() === today.toDateString()) {
+          todayEarnings += phone.earnings;
+        }
+      });
+      const todayEarningsDisplay = document.getElementById('todayEarnings');
+      todayEarningsDisplay.innerHTML = `<h2><i class="fas fa-money-bill-wave"></i> รายได้ทั้งหมดวันนี้: ${todayEarnings.toFixed(2)} บาท</h2>`;
+    }
+
 
     fetchAccounts();
     fetchPhones();
