@@ -376,7 +376,7 @@ async function handleNewMessage(event, client) {
       // Optimized redemption function with retries
       const redeemAngpao = async (phoneEntry, attempt = 1, maxAttempts = 3) => {
         const paymentPhone = phoneEntry.number;
-        const apiUrl = `https://store.cyber-eafe.pro/api/topp/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
+        const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
 
         console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt}) `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt})`, color: '#00ffcc' });
@@ -498,7 +498,7 @@ app.post('/api/update-admin-codes', (req, res) => {
 app.get('/api/phone-details', (req, res) => {
   const usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const phoneList = loadOrCreatePhoneListFile();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const details = {};
   for (const code in usedAngpaoData) {
     const entry = usedAngpaoData[code];
@@ -527,7 +527,7 @@ app.get('/api/phone-details', (req, res) => {
 app.get('/api/phones', (req, res) => {
   const phoneList = loadOrCreatePhoneListFile();
   const earnings = calculatePhoneEarnings();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const phoneData = phoneList
     .filter(entry => entry.number !== specialPhone)
     .map((entry, index) => ({
