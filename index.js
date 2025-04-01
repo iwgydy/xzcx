@@ -42,7 +42,6 @@ app.use(express.static('public'));
 function loadOrCreateGroupCountFile() {
   if (!fs.existsSync(groupCountFilePath)) {
     fs.writeFileSync(groupCountFilePath, JSON.stringify({ total: 0 }, null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ group_count.json อัตโนมัติ '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ group_count.json อัตโนมัติ`, color: '#00ff00' });
   }
   const data = JSON.parse(fs.readFileSync(groupCountFilePath, 'utf8'));
@@ -57,7 +56,6 @@ function saveGroupCountFile() {
 function loadOrCreateUsedAngpaoFile() {
   if (!fs.existsSync(usedAngpaoFilePath)) {
     fs.writeFileSync(usedAngpaoFilePath, JSON.stringify({}, null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ used_angpao.json อัตโนมัติ '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ used_angpao.json อัตโนมัติ`, color: '#00ff00' });
   }
   return JSON.parse(fs.readFileSync(usedAngpaoFilePath, 'utf8'));
@@ -70,7 +68,6 @@ function saveToUsedAngpaoFile(data) {
 function loadOrCreateExpiredPhonesFile() {
   if (!fs.existsSync(expiredPhonesFilePath)) {
     fs.writeFileSync(expiredPhonesFilePath, JSON.stringify([], null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ expired_phones.json อัตโนมัติ '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ expired_phones.json อัตโนมัติ`, color: '#00ff00' });
   }
   return JSON.parse(fs.readFileSync(expiredPhonesFilePath, 'utf8'));
@@ -83,7 +80,6 @@ function saveToExpiredPhonesFile(data) {
 function loadOrCreatePhoneListFile() {
   if (!fs.existsSync(phoneListFilePath)) {
     fs.writeFileSync(phoneListFilePath, JSON.stringify([], null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ phone_list.json อัตโนมัติ (ว่างเปล่า) '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ phone_list.json อัตโนมัติ (ว่างเปล่า)`, color: '#00ff00' });
   }
   let phoneList = JSON.parse(fs.readFileSync(phoneListFilePath, 'utf8'));
@@ -92,7 +88,6 @@ function loadOrCreatePhoneListFile() {
   
   phoneList = phoneList.filter(entry => {
     if (entry.expiresAt && entry.expiresAt < now) {
-      console.log(chalk.bgRed.black.bold(` 🗑️ เบอร์ ${entry.number} หมดอายุแล้วและถูกลบ `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🗑️ เบอร์ ${entry.number} หมดอายุแล้วและถูกลบ`, color: '#ff5555' });
       expiredPhones.push({
         number: entry.number,
@@ -117,7 +112,6 @@ function saveToPhoneListFile(data) {
 function loadOrCreateScanGroupsFile() {
   if (!fs.existsSync(scanGroupsFilePath)) {
     fs.writeFileSync(scanGroupsFilePath, JSON.stringify({}, null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ scan_groups.json อัตโนมัติ '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ scan_groups.json อัตโนมัติ`, color: '#00ff00' });
   }
   scanGroups = JSON.parse(fs.readFileSync(scanGroupsFilePath, 'utf8'));
@@ -125,7 +119,6 @@ function loadOrCreateScanGroupsFile() {
   for (const chatId in scanGroups) {
     if (scanGroups[chatId].expiresAt < now) {
       delete scanGroups[chatId];
-      console.log(chalk.bgYellow.black.bold(` ⏰ การสแกนกลุ่ม ${chatId} หมดอายุแล้ว `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ การสแกนกลุ่ม ${chatId} หมดอายุแล้ว`, color: '#ffff00' });
     }
   }
@@ -141,7 +134,6 @@ function loadOrCreateAdminCodesFile() {
   if (!fs.existsSync(adminCodesFilePath)) {
     const defaultCodes = { adminCode: DEFAULT_ADMIN_CODE, addPhoneCode: DEFAULT_ADD_PHONE_CODE };
     fs.writeFileSync(adminCodesFilePath, JSON.stringify(defaultCodes, null, 2));
-    console.log(chalk.bgGreen.black.bold(' 🌟 สร้างไฟล์ admin_codes.json อัตโนมัติด้วยรหัสเริ่มต้น '));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 สร้างไฟล์ admin_codes.json อัตโนมัติด้วยรหัสเริ่มต้น`, color: '#00ff00' });
   }
   const data = JSON.parse(fs.readFileSync(adminCodesFilePath, 'utf8'));
@@ -173,14 +165,11 @@ function calculatePhoneEarnings() {
 
 async function reconnectClient(client, phone) {
   if (!client.connected) {
-    console.log(chalk.bgYellow.black.bold(` ⚠️ บัญชี ${phone} หลุดการเชื่อมต่อ กำลังเชื่อมต่อใหม่... `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ บัญชี ${phone} หลุดการเชื่อมต่อ กำลังเชื่อมต่อใหม่`, color: '#ffff00' });
     try {
       await client.connect();
-      console.log(chalk.bgGreen.black.bold(` 🌟 บัญชี ${phone} เชื่อมต่อใหม่สำเร็จ `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 บัญชี ${phone} เชื่อมต่อใหม่สำเร็จ`, color: '#00ff00' });
     } catch (error) {
-      console.log(chalk.bgRed.black.bold(` ❌ ล้มเหลวในการเชื่อมต่อใหม่ ${phone}: ${error.message} `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ❌ ล้มเหลวในการเชื่อมต่อใหม่ ${phone}: ${error.message}`, color: '#ff5555' });
     }
   }
@@ -198,39 +187,33 @@ async function handleAdmin(event, client) {
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌌 คำสั่ง /admin จาก ${userId}: ${message.text}`, color: '#00ffcc' });
 
   if (userId !== ADMIN_ID) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ ไม่ใช่แอดมิน - ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🚀 เฉพาะแอดมินเท่านั้นที่ใช้คำสั่งนี้ได้!' });
     return;
   }
   if (!phoneNumber || !code || !name) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ ขาดเบอร์ รหัส หรือชื่อ โดย ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌠 กรุณาใส่เบอร์โทร รหัส 8 หลัก และชื่อ เช่น /admin 0987654321 975699zx นายแดง' });
     return;
   }
 
   if (code !== currentAddPhoneCode) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ รหัสไม่ถูกต้อง ${code} โดย ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌌 รหัส 8 หลักไม่ถูกต้อง!' });
     return;
   }
 
   const phoneRegex = /^0\d{9}$/;
   if (!phoneRegex.test(phoneNumber)) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ เบอร์ไม่ถูกต้อง ${phoneNumber} โดย ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌌 เบอร์ต้องมี 10 หลักและขึ้นต้นด้วย 0 นะคะ!' });
     return;
   }
 
   const phoneList = loadOrCreatePhoneListFile();
   if (phoneList.some(entry => entry.number === phoneNumber)) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ เบอร์ซ้ำ ${phoneNumber} โดย ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌙 เบอร์นี้มีอยู่ในระบบแล้วค่ะ!' });
     return;
   }
 
   phoneList.push({ number: phoneNumber, name });
   saveToPhoneListFile(phoneList);
-  console.log(chalk.bgMagenta.black.bold(` 🎉 เพิ่มเบอร์ ${phoneNumber} ชื่อ ${name} โดยแอดมิน ${userId} `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🎉 เพิ่มเบอร์ ${phoneNumber} ชื่อ ${name} โดย ${userId}`, color: '#00ff00' });
   await client.sendMessage(message.chatId, { message: `🌟 เพิ่มเบอร์ ${phoneNumber} ชื่อ ${name} สำเร็จแล้วค่ะ!` });
 }
@@ -243,14 +226,12 @@ async function handleScanAngpao(event, client) {
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌌 คำสั่ง /scanangpao จาก ${userId} ใน ${chatId}`, color: '#00ffcc' });
 
   if (userId !== ADMIN_ID) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ ไม่ใช่แอดมิน - ${userId}`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🚀 เฉพาะแอดมินเท่านั้นที่ใช้คำสั่งนี้ได้!' });
     return;
   }
 
   const chat = await client.getEntity(message.chatId);
   if (!chat.group && !chat.supergroup) {
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⚠️ คำสั่งนี้ใช้ได้เฉพาะในกลุ่มเท่านั้น`, color: '#ff5555' });
     await client.sendMessage(message.chatId, { message: '🌌 คำสั่งนี้ใช้ได้เฉพาะในกลุ่มเท่านั้นค่ะ!' });
     return;
   }
@@ -260,7 +241,6 @@ async function handleScanAngpao(event, client) {
   scanGroups[chatId] = { expiresAt };
   saveToScanGroupsFile(scanGroups);
 
-  console.log(chalk.bgGreen.black.bold(` 🌟 เปิดการสแกนอั่งเปาในกลุ่ม ${chatId} เรียบร้อยแล้ว `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 เปิดการสแกนอั่งเปาในกลุ่ม ${chatId} ถึง ${new Date(expiresAt).toLocaleString('th-TH')}`, color: '#00ff00' });
   await client.sendMessage(message.chatId, { message: '* คือพร้อมใช้แล้ว' });
 }
@@ -279,9 +259,6 @@ async function handleNewMessage(event, client) {
     const chat = await client.getEntity(message.chatId);
     const chatType = chat.group || chat.supergroup ? 'กลุ่ม' : 'ส่วนตัว';
 
-    console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌌 รับข้อความจาก ${chatType} ${chatId} - ${userId}: ${text} `));
-    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📩 รับข้อความจาก ${chatType} ${chatId} - ${userId}: ${text}`, color: '#00ffcc' });
-
     loadOrCreateScanGroupsFile();
     const now = Date.now();
 
@@ -290,34 +267,25 @@ async function handleNewMessage(event, client) {
     const inviteMatch = text.match(inviteLinkRegex);
     if (inviteMatch) {
       const inviteCode = inviteMatch[1];
-      console.log(chalk.bgYellow.black.bold(` ${botLabel} 🌠 พบลิงก์เชิญ: ${inviteMatch[0]} (รหัส: ${inviteCode})`));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌠 พบลิงก์เชิญ: ${inviteMatch[0]}`, color: '#ffff00' });
       try {
         const joinResult = await client.invoke(new Api.messages.ImportChatInvite({ hash: inviteCode }));
         const newChatId = String(joinResult.chats[0].id.value);
         totalGroupsJoined++;
         saveGroupCountFile();
-        console.log(chalk.bgGreen.black.bold(` ${botLabel} 🌟 เข้าร่วมกลุ่มใหม่ ${newChatId} สำเร็จ (กลุ่มที่ ${totalGroupsJoined})`));
-        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌟 เข้าร่วมกลุ่มใหม่ ${newChatId} สำเร็จ (กลุ่มที่ ${totalGroupsJoined})`, color: '#00ff00' });
-        const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-        scanGroups[newChatId] = { expiresAt };
+        scanGroups[newChatId] = { expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 };
         saveToScanGroupsFile(scanGroups);
+        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌟 เข้าร่วมกลุ่มใหม่ ${newChatId} สำเร็จ (กลุ่มที่ ${totalGroupsJoined})`, color: '#00ff00' });
       } catch (joinError) {
-        console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ล้มเหลวในการเข้าร่วมกลุ่ม: ${joinError.message}`));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ล้มเหลวในการเข้าร่วมกลุ่ม: ${joinError.message}`, color: '#ff5555' });
       }
     }
 
     // การส่งต่อรูปภาพ
     if (message.media && message.media.className === 'MessageMediaPhoto') {
-      console.log(chalk.bgYellow.black.bold(` ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId} `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🖼️ พบภาพใน ${chatType} ${chatId}`, color: '#ffff00' });
       try {
         await client.forwardMessages('@E771VIPCHNM_BOT', { messages: message.id, fromPeer: message.chatId });
-        console.log(chalk.bgGreen.black.bold(` ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📤 ส่งต่อภาพไปยัง @E771VIPCHNM_BOT สำเร็จ`, color: '#00ff00' });
       } catch (error) {
-        console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ล้มเหลวในการส่งต่อภาพไปยัง @E771VIPCHNM_BOT: ${error.message} `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ล้มเหลวในการส่งต่อภาพ: ${error.message}`, color: '#ff5555' });
       }
     }
@@ -327,68 +295,30 @@ async function handleNewMessage(event, client) {
       const regex = /https:\/\/gift\.truemoney\.com\/campaign\/\?v=([a-zA-Z0-9]+)/;
       const matchResult = text.match(regex);
 
-      if (!matchResult || !matchResult[0]) {
-        console.log(chalk.bgRed.black.bold(` ${botLabel} ⚠️ ไม่พบลิงก์ TrueMoney Gift ที่ตรงเงื่อนไขในข้อความ: ${text} `));
-        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ไม่พบลิงก์ TrueMoney Gift ที่ตรงเงื่อนไขในข้อความ: ${text}`, color: '#ff5555' });
-        return;
-      }
+      if (!matchResult || !matchResult[0]) return;
 
       const angpaoLink = matchResult[0];
       const angpaoCode = matchResult[1];
-
-      // ตรวจสอบลิงก์ว่ามีอยู่ในระบบหรือไม่
-      try {
-        const existingLinksResponse = await fetch('http://de01.uniplex.xyz:1636/api/data/telegram');
-        const existingLinks = await existingLinksResponse.json();
-        const isLinkExist = existingLinks.some(item => item.link === angpaoLink);
-        if (isLinkExist) {
-          console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ ลิงก์ ${angpaoLink} มีอยู่ในระบบแล้ว ข้ามการบันทึก `));
-          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ลิงก์ ${angpaoLink} มีอยู่ในระบบแล้ว ข้ามการบันทึก`, color: '#ffff00' });
-        } else {
-          const saveResponse = await fetch('http://de01.uniplex.xyz:1636/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ link: angpaoLink, source: 'telegram' })
-          });
-          const saveData = await saveResponse.json();
-          console.log(chalk.bgGreen.black.bold(` ${botLabel} 📜 บันทึก URL ${angpaoLink} สำเร็จ: ${JSON.stringify(saveData)} `));
-          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📜 บันทึก URL ${angpaoLink} สำเร็จ`, color: '#00ff00' });
-        }
-      } catch (saveError) {
-        console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ล้มเหลวในการตรวจสอบ/บันทึก URL ${angpaoLink}: ${saveError.message} `));
-        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ล้มเหลวในการตรวจสอบ/บันทึก URL ${angpaoLink}: ${saveError.message}`, color: '#ff5555' });
-      }
-
       let usedAngpaoData = loadOrCreateUsedAngpaoFile();
       const phoneList = loadOrCreatePhoneListFile();
       const specialPhone = '';
       const allPhones = [{ number: specialPhone, name: 'บัญชีพิเศษ' }, ...phoneList];
 
       if (allPhones.length === 0) {
-        console.log(chalk.bgRed.black.bold(` ${botLabel} ⚠️ ไม่มีเบอร์ในระบบ ไม่สามารถเติมเงินได้ `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ไม่มีเบอร์ในระบบ ไม่สามารถเติมเงินได้`, color: '#ff5555' });
         return;
       }
 
-      console.log(chalk.bgYellow.black.bold(` ${botLabel} 📞 พบ ${allPhones.length} เบอร์ (รวมเบอร์พิเศษ) `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📞 พบ ${allPhones.length} เบอร์ (รวมเบอร์พิเศษ)`, color: '#ffff00' });
-
-      // ฟังก์ชันเติมเงินที่ปรับปรุงให้มีระบบลองใหม่
+      // ฟังก์ชัน redeem ทันทีสำหรับแต่ละเบอร์
       const redeemAngpao = async (phoneEntry, attempt = 1, maxAttempts = 3) => {
         const paymentPhone = phoneEntry.number;
         const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
-
-        console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt}) `));
-        botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌐 เรียก API: ${apiUrl} (ครั้งที่ ${attempt})`, color: '#00ffcc' });
 
         apiStats.totalLinksSent++;
 
         try {
           const response = await axios.get(apiUrl, { timeout: 10000 });
           const responseData = response.data;
-
-          console.log(chalk.bgYellow.black.bold(` ${botLabel} 📩 ได้รับการตอบกลับ: ${JSON.stringify(responseData)} `));
-          botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 📩 ได้รับการตอบกลับ: ${JSON.stringify(responseData)}`, color: '#ffff00' });
 
           if (response.status === 200 && responseData.status.code === "SUCCESS") {
             apiStats.successfulLinks++;
@@ -417,13 +347,6 @@ async function handleNewMessage(event, client) {
               saveToUsedAngpaoFile(usedAngpaoData);
             }
 
-            console.log(
-              chalk.bgGreen.black.bold(` ${botLabel} 💰 เติมสำเร็จ! `) +
-              chalk.cyan(` ซอง: ${angpaoCode} `) +
-              chalk.green(` จำนวน: ${amount} บาท `) +
-              chalk.magenta(` เบอร์: ${paymentPhone} `) +
-              chalk.gray(`[${new Date().toLocaleTimeString()}]`)
-            );
             botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 💰 เติมสำเร็จ ${angpaoCode} -> ${paymentPhone} ${amount} บาท`, color: '#00ff00' });
             return { success: true, phone: paymentPhone, amount };
           } else {
@@ -435,50 +358,21 @@ async function handleNewMessage(event, client) {
           apiStats.lastErrorTime = new Date().toISOString();
 
           if (attempt < maxAttempts) {
-            console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ ลองใหม่ครั้งที่ ${attempt + 1} สำหรับ ${paymentPhone} `));
-            botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ ลองใหม่ครั้งที่ ${attempt + 1} สำหรับ ${paymentPhone}`, color: '#ffff00' });
             await new Promise(resolve => setTimeout(resolve, 500));
             return redeemAngpao(phoneEntry, attempt + 1, maxAttempts);
           }
 
-          console.log(
-            chalk.bgRed.black.bold(` ${botLabel} ⚠️ เติมล้มเหลว `) +
-            chalk.cyan(` ซอง: ${angpaoCode} `) +
-            chalk.magenta(` เบอร์: ${paymentPhone} `) +
-            chalk.red(` เหตุผล: ${error.message} `) +
-            chalk.gray(`[${new Date().toLocaleTimeString()}]`)
-          );
           botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ เติมล้มเหลว ${angpaoCode} -> ${paymentPhone}: ${error.message}`, color: '#ff5555' });
           return { success: false, phone: paymentPhone, error: error.message };
         }
       };
 
-      // ประมวลผลเบอร์เป็นชุด ชุดละ 3 เบอร์
-      console.log(chalk.bgCyan.black.bold(` ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType} ${chatId} `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} 🌌 เริ่มดักซอง ${angpaoCode} จาก ${chatType === 'ส่วนตัว' ? 'แชทส่วนตัว' : 'กลุ่ม'} ${chatId}`, color: '#00ffcc' });
-
-      const batchSize = 3;
-      const redemptionPromises = [];
-
-      for (let i = 0; i < allPhones.length; i += batchSize) {
-        const batch = allPhones.slice(i, i + batchSize);
-        const batchPromises = batch.map(phoneEntry => redeemAngpao(phoneEntry));
-        redemptionPromises.push(Promise.all(batchPromises));
+      // ประมวลผลทีละเบอร์ทันที
+      for (const phoneEntry of allPhones) {
+        await redeemAngpao(phoneEntry);
       }
-
-      // รันชุดคำสั่งแบบเรียงลำดับ แต่ในแต่ละชุดทำงานพร้อมกัน
-      for (const batchPromise of redemptionPromises) {
-        await batchPromise; // รอให้แต่ละชุด 3 เบอร์เสร็จก่อนเริ่มชุดถัดไป
-      }
-
-      console.log(chalk.bgGreen.black.bold(` ${botLabel} ✅ การดักซอง ${angpaoCode} เสร็จสิ้น `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ✅ การดักซอง ${angpaoCode} เสร็จสิ้น`, color: '#00ff00' });
-    } else {
-      console.log(chalk.bgYellow.black.bold(` ${botLabel} ⚠️ กลุ่ม ${chatId} ไม่ได้เปิดการสแกนอั่งเปา หรือหมดอายุแล้ว `));
-      botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ⚠️ กลุ่ม ${chatId} ไม่ได้เปิดการสแกนอั่งเปา หรือหมดอายุแล้ว`, color: '#ff5555' });
     }
   } catch (error) {
-    console.log(chalk.bgRed.black.bold(` ${botLabel} ❌ ข้อผิดพลาดใน handleNewMessage: ${error.message} `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ${botLabel} ❌ ข้อผิดพลาดใน handleNewMessage: ${error.message}`, color: '#ff5555' });
     await reconnectClient(client, client.phone);
   }
@@ -498,12 +392,10 @@ app.post('/api/update-admin-codes', (req, res) => {
 
   if (adminCode && typeof adminCode === 'string' && adminCode.length >= 8) {
     currentAdminCode = adminCode;
-    console.log(chalk.bgYellow.black.bold(` ✏️ เปลี่ยนรหัสแอดมินเป็น ${currentAdminCode} ผ่านเว็บ `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ เปลี่ยนรหัสแอดมินเป็น ${currentAdminCode} ผ่านเว็บ`, color: '#ffff00' });
   }
   if (addPhoneCode && typeof addPhoneCode === 'string' && addPhoneCode.length >= 8) {
     currentAddPhoneCode = addPhoneCode;
-    console.log(chalk.bgYellow.black.bold(` ✏️ เปลี่ยนรหัสเพิ่มเบอร์เป็น ${currentAddPhoneCode} ผ่านเว็บ `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ เปลี่ยนรหัสเพิ่มเบอร์เป็น ${currentAddPhoneCode} ผ่านเว็บ`, color: '#ffff00' });
   }
 
@@ -585,7 +477,6 @@ app.post('/api/add-phone', (req, res) => {
   phoneList.push({ number: phone, name, expiresAt: expiresTimestamp });
   saveToPhoneListFile(phoneList);
   res.json({ message: `เพิ่มเบอร์ ${phone} ชื่อ ${name} หมดอายุ ${new Date(expiresTimestamp).toLocaleString('th-TH')} สำเร็จ` });
-  console.log(chalk.bgMagenta.black.bold(` 🎉 เพิ่มเบอร์ ${phone} ชื่อ ${name} หมดอายุ ${new Date(expiresTimestamp).toLocaleString('th-TH')} ผ่านเว็บ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🎉 เพิ่มเบอร์ ${phone} ชื่อ ${name} หมดอายุ ${new Date(expiresTimestamp).toLocaleString('th-TH')} ผ่านเว็บ`, color: '#00ff00' });
 });
 
@@ -597,7 +488,6 @@ app.delete('/api/delete-phone', (req, res) => {
   if (phoneList.length === initialLength) return res.status(400).json({ error: 'ไม่พบเบอร์นี้ในระบบ' });
   saveToPhoneListFile(phoneList);
   res.json({ message: `ลบเบอร์ ${phone} สำเร็จ` });
-  console.log(chalk.bgRed.black.bold(` 🗑️ ลบเบอร์ ${phone} ผ่านเว็บ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🗑️ ลบเบอร์ ${phone} ผ่านเว็บ`, color: '#ff5555' });
 });
 
@@ -622,7 +512,6 @@ app.put('/api/edit-phone', (req, res) => {
   phoneEntry.expiresAt = expiresTimestamp;
   saveToPhoneListFile(phoneList);
   res.json({ message: `แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} หมดอายุ ${new Date(expiresTimestamp).toLocaleString('th-TH')} สำเร็จ` });
-  console.log(chalk.bgYellow.black.bold(` ✏️ แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} ผ่านเว็บ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ แก้ไขเบอร์จาก ${oldPhone} เป็น ${newPhone} ชื่อ ${name} ผ่านเว็บ`, color: '#ffff00' });
 });
 
@@ -634,7 +523,6 @@ app.put('/api/edit-phone-name', (req, res) => {
   phoneEntry.name = name;
   saveToPhoneListFile(phoneList);
   res.json({ message: `แก้ไขชื่อของ ${phone} เป็น ${name} สำเร็จ` });
-  console.log(chalk.bgYellow.black.bold(` ✏️ แก้ไขชื่อ ${phone} เป็น ${name} ผ่านเว็บ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ✏️ แก้ไขชื่อ ${phone} เป็น ${name} ผ่านเว็บ`, color: '#ffff00' });
 });
 
@@ -651,11 +539,9 @@ app.delete('/api/delete-bot', async (req, res) => {
     if (fs.existsSync(sessionFile)) fs.unlinkSync(sessionFile);
     clients.splice(clientIndex, 1);
     res.json({ message: `ลบ bot ${phone} สำเร็จ` });
-    console.log(chalk.bgRed.black.bold(` 🗑️ ลบ bot ${phone} ผ่านเว็บ `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🗑️ ลบ bot ${phone} ผ่านเว็บ`, color: '#ff5555' });
   } catch (error) {
     res.status(500).json({ error: `เกิดข้อผิดพลาดในการลบ bot: ${error.message}` });
-    console.log(chalk.bgRed.black.bold(` ❌ ข้อผิดพลาดในการลบ bot ${phone}: ${error.message} `));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ❌ ข้อผิดพลาดในการลบ bot ${phone}: ${error.message}`, color: '#ff5555' });
   }
 });
@@ -677,9 +563,7 @@ app.post('/api/send-code', async (req, res) => {
   const { phone } = req.body;
   const phoneRegex = /^\+\d{10,12}$/;
 
-  console.log(chalk.bgYellow.black.bold(`[DEBUG] Received phone: ${phone}`));
   if (!phone || !phoneRegex.test(phone)) {
-    console.log(chalk.bgRed.black.bold(`[DEBUG] Invalid phone format: ${phone}`));
     return res.status(400).json({ error: 'เบอร์ไม่ถูกต้อง ต้องใช้รูปแบบสากล เช่น +66971432317' });
   }
 
@@ -690,18 +574,15 @@ app.post('/api/send-code', async (req, res) => {
   client.phone = phone;
 
   try {
-    console.log(chalk.bgCyan.black.bold(`[DEBUG] Connecting to Telegram for ${phone}...`));
     await client.connect();
     if (await client.isUserAuthorized()) {
       if (!clients.some(c => c.phone === phone)) {
         clients.push(client);
         setupClientEvents(client);
       }
-      console.log(chalk.bgGreen.black.bold(`[DEBUG] ${phone} already authorized`));
       return res.json({ message: `บัญชี ${phone} เชื่อมต่อสำเร็จ (มีเซสชันอยู่แล้ว)` });
     }
 
-    console.log(chalk.bgYellow.black.bold(`[DEBUG] Sending verification code to ${phone}...`));
     const sendCodeResult = await client.invoke(new Api.auth.SendCode({
       phoneNumber: phone,
       apiId: API_ID,
@@ -711,10 +592,8 @@ app.post('/api/send-code', async (req, res) => {
 
     client.phoneCodeHash = sendCodeResult.phoneCodeHash;
     if (!clients.some(c => c.phone === phone)) clients.push(client);
-    console.log(chalk.bgGreen.black.bold(`[DEBUG] Code sent to ${phone}`));
     res.json({ message: `ส่งรหัสยืนยันไปยัง ${phone} เรียบร้อยแล้ว`, phone });
   } catch (error) {
-    console.error(chalk.bgRed.black.bold(`[DEBUG] Error in /api/send-code for ${phone}: ${error.message}`));
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ❌ ข้อผิดพลาดใน /api/send-code: ${error.message}`, color: '#ff5555' });
     res.status(500).json({ error: `เกิดข้อผิดพลาด: ${error.message}` });
   }
@@ -742,7 +621,6 @@ app.post('/api/verify-code', async (req, res) => {
 
   fs.writeFileSync(path.join(sessionsDir, `${phone}.txt`), client.session.save());
   setupClientEvents(client);
-  console.log(chalk.bgGreen.black.bold(` 🌟 ล็อกอินบัญชี ${phone} สำเร็จ `));
   botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 ล็อกอินบัญชี ${phone} สำเร็จ`, color: '#00ff00' });
   res.json({ message: `ล็อกอินบัญชี ${phone} สำเร็จ` });
 });
@@ -806,7 +684,7 @@ app.get('/admin', (req, res) => {
         .back-btn:hover { background: rgba(255, 255, 255, 0.4); }
         .back-btn i { color: #FFFFFF; font-size: 1.2em; }
         .nav-menu { 
-          display: none; /* ซ่อนเมนูแนวตั้ง */
+          display: none;
         }
         .container { 
           width: 100%; 
@@ -941,7 +819,6 @@ app.get('/admin', (req, res) => {
         <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i></a>
       </div>
       <div class="nav-menu" id="navMenu">
-        <!-- เมนูถูกซ่อน -->
       </div>
       <div class="toast-container" id="toastContainer"></div>
       <div class="container">
@@ -1009,7 +886,6 @@ app.get('/admin', (req, res) => {
               tbody.appendChild(tr);
             });
           } catch (error) {
-            console.error('Error fetching accounts:', error);
             showToast('เกิดข้อผิดพลาดในการโหลดบัญชี', 'error');
           }
         }
@@ -1037,7 +913,6 @@ app.get('/admin', (req, res) => {
               tbody.appendChild(tr);
             });
           } catch (error) {
-            console.error('Error fetching phones:', error);
             showToast('เกิดข้อผิดพลาดในการโหลดรายชื่อเบอร์', 'error');
           }
         }
@@ -1244,21 +1119,17 @@ async function loadExistingSessions() {
     const client = new TelegramClient(session, API_ID, API_HASH, { connectionRetries: 20, timeout: 120000, retryDelay: 5000 });
     client.phone = phone;
     try {
-      console.log(chalk.bgCyan.black.bold(` กำลังโหลดเซสชันสำหรับ ${phone}... `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌌 กำลังโหลดเซสชันสำหรับ ${phone}`, color: '#00ffcc' });
       await client.connect();
       if (await client.isUserAuthorized()) {
         clients.push(client);
         setupClientEvents(client);
-        console.log(chalk.bgGreen.black.bold(` 🌟 โหลดเซสชัน ${phone} สำเร็จ `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🌟 โหลดเซสชัน ${phone} สำเร็จ`, color: '#00ff00' });
       } else {
-        console.log(chalk.bgRed.black.bold(` ❌ เซสชัน ${phone} ไม่ถูกต้อง ลบไฟล์เซสชันออก `));
         botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ❌ เซสชัน ${phone} ไม่ถูกต้อง ลบไฟล์เซสชันออก`, color: '#ff5555' });
         fs.unlinkSync(path.join(sessionsDir, file));
       }
     } catch (error) {
-      console.log(chalk.bgRed.black.bold(` ❌ ข้อผิดพลาดในการโหลดเซสชัน ${phone}: ${error.message} `));
       botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ❌ ข้อผิดพลาดในการโหลดเซสชัน ${phone}: ${error.message}`, color: '#ff5555' });
     }
   }
@@ -1271,10 +1142,9 @@ async function loadExistingSessions() {
   loadOrCreateAdminCodesFile();
 
   setInterval(() => {
-  loadOrCreatePhoneListFile();
-  console.log(chalk.bgCyan.black.bold(` ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว `));
-  botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว`, color: '#00ffcc' });
-}, 10 * 60 * 1000); // ตรวจสอบทุก 10 นาที
+    loadOrCreatePhoneListFile();
+    botLogs.push({ text: `[${new Date().toLocaleTimeString()}] ⏰ ตรวจสอบเบอร์ที่หมดอายุเรียบร้อยแล้ว`, color: '#00ffcc' });
+  }, 10 * 60 * 1000); // ตรวจสอบทุก 10 นาที
 
   app.listen(port, () => {
     console.log(chalk.bgGreen.black.bold(` 🌐 Server running at http://0.0.0.0:${port} (เซิร์ฟเวอร์เริ่มทำงานที่) `));
