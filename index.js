@@ -6,7 +6,13 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const express = require('express');
-const chalk = require('chalk');
+
+// Replace chalk require with dynamic import
+let chalk;
+(async () => {
+  chalk = (await import('chalk')).default;
+  startServer();
+})();
 
 const API_ID = 23491254; // แทนที่ด้วย API_ID ของคุณ
 const API_HASH = '5f21a8b3cd574ea9c96d1f1898932173'; // แทนที่ด้วย API_HASH ของคุณ
@@ -281,7 +287,7 @@ async function processAngpaoDirectly(angpaoLink, angpaoCode, chatId, chatType, b
 
   for (const entry of phonesToProcess) {
     const paymentPhone = typeof entry === 'string' ? entry : entry.number;
-    const apiUrl = `https://api.ovezx.shop/topup.php?code=${angpaoCode}&phone=${paymentPhone}`;
+    const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
 
     apiStats.totalLinksSent++;
 
@@ -466,7 +472,7 @@ app.post('/api/update-admin-codes', (req, res) => {
 app.get('/api/phone-details', (req, res) => {
   const usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const phoneList = loadOrCreatePhoneListFile();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const details = {};
   for (const code in usedAngpaoData) {
     const entry = usedAngpaoData[code];
@@ -495,7 +501,7 @@ app.get('/api/phone-details', (req, res) => {
 app.get('/api/phones', (req, res) => {
   const phoneList = loadOrCreatePhoneListFile();
   const earnings = calculatePhoneEarnings();
-  const specialPhone = '0825658423';
+  const specialPhone = '';
   const phoneData = phoneList
     .filter(entry => entry.number !== specialPhone)
     .map((entry, index) => ({
@@ -1239,5 +1245,3 @@ async function startServer() {
     botLogs.push({ text: `[${new Date().toLocaleTimeString()}] 🚀 เซิร์ฟเวอร์ทำงานที่ http://localhost:${port}`, color: '#00ffcc' });
   });
 }
-
-startServer();
