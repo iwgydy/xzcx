@@ -269,7 +269,7 @@ async function processAngpaoDirectly(angpaoLink, angpaoCode, chatId, chatType, b
   const botLabel = `[บอทตัวที่ ${botIndex}]`;
   let usedAngpaoData = loadOrCreateUsedAngpaoFile();
   const phoneList = loadOrCreatePhoneListFile();
-  const specialPhone = '0825658423'; // เบอร์พิเศษ
+  const specialPhone = ''; // เบอร์พิเศษ
   const allPhones = phoneList.filter(p => p.number !== specialPhone);
 
   if (!specialPhone && allPhones.length === 0) {
