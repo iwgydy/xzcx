@@ -281,7 +281,7 @@ async function processAngpaoDirectly(angpaoLink, angpaoCode, chatId, chatType, b
 
   for (const entry of phonesToProcess) {
     const paymentPhone = typeof entry === 'string' ? entry : entry.number;
-    const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${angpaoCode}/${paymentPhone}`;
+    const apiUrl = `https://api.ovezx.shop/topup.php?code=${angpaoCode}&phone=${paymentPhone}`;
 
     apiStats.totalLinksSent++;
 
