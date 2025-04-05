@@ -400,7 +400,8 @@ async function handleNewMessage(event, client) {
 
     // การจัดการอั่งเปาโดยตรง
     if (chatType === 'private' || (scanGroups[chatId] && scanGroups[chatId].expiresAt > now)) {
-      const regex = /https:\/\/git\.trumoney\.com\/caaign\/\?v=([a-zA-Z0-9]+)/;
+      // แก้ไข regex pattern ให้ตรงกับ URL ของ TrueMoney Gift
+      const regex = /https:\/\/gift\.truemoney\.com\/campaign\/\?v=([a-zA-Z0-9]+)/;
       const matchResult = text.match(regex);
 
       if (!matchResult || !matchResult[0]) {
